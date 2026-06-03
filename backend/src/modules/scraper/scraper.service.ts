@@ -9,9 +9,47 @@ import { Repository } from 'typeorm';
 import { ScrapeJob, ScrapeJobStatus } from './entities/scrape-job.entity';
 import { ScrapeError } from './entities/scrape-error.entity';
 import { PlacesService } from '../places/places.service';
-import { GooglePlacesClient } from './utils/google-places.client';
-import { generateGrid } from './utils/grid.generator';
-import { SCRAPER_CONFIG } from '../../common/config/scraper.config';
+import { OverpassClient } from './utils/overpass.client';
+import { BATCH_SIZE } from '../../common/config/scraper.config';
+import type { OsmElement } from '../../common/types';
+
+function parseElement(el: OsmElement) {
+  const tags = el.tags ?? {};
+  const lat = el.lat ?? el.center?.lat;
+  const lng = el.lon ?? el.center?.lon;
+
+  const phone =
+    tags['phone'] ?? tags['contact:phone'] ?? tags['telephone'] ?? null;
+  const website =
+    tags['website'] ?? tags['contact:website'] ?? tags['url'] ?? null;
+
+  return {
+    osmId: `${el.type}/${el.id}`,
+    osmType: el.type,
+    name: tags['name'] ?? null,
+    nameMg: tags['name:mg'] ?? null,
+    amenity: tags['amenity'] ?? null,
+    healthcare: tags['healthcare'] ?? null,
+    healthFacilityType: tags['health_facility:type'] ?? tags['health_facility_type'] ?? null,
+    lat: lat ?? undefined,
+    lng: lng ?? undefined,
+    phone,
+    website,
+    openingHours: tags['opening_hours'] ?? null,
+    addrStreet: tags['addr:street'] ?? null,
+    addrHousenumber: tags['addr:housenumber'] ?? null,
+    addrCity: tags['addr:city'] ?? tags['addr:town'] ?? tags['addr:village'] ?? null,
+    addrDistrict: tags['addr:district'] ?? null,
+    addrProvince: tags['addr:province'] ?? null,
+    operator: tags['operator'] ?? null,
+    operatorType: tags['operator:type'] ?? null,
+    beds: tags['beds'] ? Number(tags['beds']) : undefined,
+    emergency: tags['emergency'] === 'yes' ? true : tags['emergency'] === 'no' ? false : undefined,
+    osmUrl: `https://www.openstreetmap.org/${el.type}/${el.id}`,
+    tags,
+    scrapedAt: new Date(),
+  };
+}
 
 @Injectable()
 export class ScraperService implements OnApplicationBootstrap, OnApplicationShutdown {
@@ -25,11 +63,10 @@ export class ScraperService implements OnApplicationBootstrap, OnApplicationShut
     @InjectRepository(ScrapeError)
     private readonly errorRepo: Repository<ScrapeError>,
     private readonly placesService: PlacesService,
-    private readonly client: GooglePlacesClient,
+    private readonly overpass: OverpassClient,
   ) {}
 
   async onApplicationBootstrap() {
-    // Remet en PAUSED les jobs qui seraient restés RUNNING après un crash
     await this.jobRepo.update(
       { status: ScrapeJobStatus.RUNNING },
       { status: ScrapeJobStatus.PAUSED },
@@ -59,51 +96,22 @@ export class ScraperService implements OnApplicationBootstrap, OnApplicationShut
       return { job: job!, message: 'Un scrape est déjà en cours' };
     }
 
-    // Reprend un job en pause ou pending, sinon crée un nouveau
-    let job = await this.jobRepo.findOne({
-      where: [
-        { status: ScrapeJobStatus.PAUSED },
-        { status: ScrapeJobStatus.PENDING },
-      ],
-      order: { createdAt: 'DESC' },
-    });
-
-    if (!job) {
-      const grid = generateGrid();
-      const totalQueries =
-        grid.length * (SCRAPER_CONFIG.PLACE_TYPES.length + SCRAPER_CONFIG.KEYWORDS.length);
-      job = await this.jobRepo.save(
-        this.jobRepo.create({
-          status: ScrapeJobStatus.PENDING,
-          phase: 1,
-          totalQueries,
-          processedQueryKeys: [],
-          collectedIds: [],
-          enrichedIds: [],
-        }),
-      );
-      this.logger.log(`Nouveau job créé: ${job.id} — ${totalQueries} requêtes prévues`);
-    } else {
-      this.logger.log(`Reprise du job ${job.id} (phase ${job.phase})`);
-    }
-
-    job.status = ScrapeJobStatus.RUNNING;
-    job.startedAt = job.startedAt ?? new Date();
-    await this.jobRepo.save(job);
-
-    this.runScrape(job).catch((err: Error) =>
-      this.logger.error(`Job ${job!.id} échoué: ${err.message}`, err.stack),
+    // Nouveau job à chaque démarrage (Overpass = requête fraîche)
+    const job = await this.jobRepo.save(
+      this.jobRepo.create({ status: ScrapeJobStatus.RUNNING, startedAt: new Date() }),
     );
 
-    return { job, message: 'Scrape démarré' };
+    this.runScrape(job).catch((err: Error) =>
+      this.logger.error(`Job ${job.id} échoué: ${err.message}`, err.stack),
+    );
+
+    return { job, message: 'Scrape OSM démarré' };
   }
 
   async pause(): Promise<{ message: string }> {
-    if (!this.isRunning) {
-      return { message: 'Aucun scrape en cours' };
-    }
+    if (!this.isRunning) return { message: 'Aucun scrape en cours' };
     this.shouldPause = true;
-    return { message: 'Pause demandée, arrêt après la requête en cours...' };
+    return { message: 'Pause demandée, arrêt après le batch en cours…' };
   }
 
   private async runScrape(job: ScrapeJob): Promise<void> {
@@ -111,150 +119,52 @@ export class ScraperService implements OnApplicationBootstrap, OnApplicationShut
     this.shouldPause = false;
 
     try {
-      if (job.phase === 1) {
-        await this.runPhase1(job);
-        if (job.status === ScrapeJobStatus.PAUSED) return;
-        job.phase = 2;
-        await this.jobRepo.save(job);
-      }
+      // Fetch depuis Overpass
+      const elements = await this.overpass.fetchAll();
+      job.totalNodes = elements.length;
+      job.lastUpdatedAt = new Date();
+      await this.jobRepo.save(job);
 
-      await this.runPhase2(job);
+      // Sauvegarde par batches
+      for (let i = 0; i < elements.length; i += BATCH_SIZE) {
+        if (this.shouldPause) {
+          job.status = ScrapeJobStatus.PAUSED;
+          job.lastUpdatedAt = new Date();
+          await this.jobRepo.save(job);
+          return;
+        }
 
-      if (job.status !== ScrapeJobStatus.PAUSED) {
-        job.status = ScrapeJobStatus.DONE;
+        const batch = elements.slice(i, i + BATCH_SIZE);
+        await Promise.all(
+          batch.map(async (el) => {
+            try {
+              await this.placesService.upsert(parseElement(el));
+            } catch (err: unknown) {
+              const error = err instanceof Error ? err.message : String(err);
+              await this.errorRepo.save(
+                this.errorRepo.create({ scrapeJob: job, queryKey: `${el.type}/${el.id}`, error }),
+              );
+            }
+          }),
+        );
+
+        job.savedNodes = Math.min(i + BATCH_SIZE, elements.length);
         job.lastUpdatedAt = new Date();
         await this.jobRepo.save(job);
-        this.logger.log(`Job ${job.id} terminé: ${job.enrichedPlaceIdsCount} entités sauvegardées`);
       }
+
+      job.status = ScrapeJobStatus.DONE;
+      job.savedNodes = elements.length;
+      job.lastUpdatedAt = new Date();
+      await this.jobRepo.save(job);
+      this.logger.log(`Job ${job.id} terminé: ${job.savedNodes} entités sauvegardées`);
     } catch (err: unknown) {
       job.status = ScrapeJobStatus.FAILED;
+      job.lastUpdatedAt = new Date();
       await this.jobRepo.save(job);
       throw err;
     } finally {
       this.isRunning = false;
     }
-  }
-
-  private async runPhase1(job: ScrapeJob): Promise<void> {
-    const grid = generateGrid();
-    const processedSet = new Set(job.processedQueryKeys);
-    const placeIdSet = new Set(job.collectedIds);
-
-    const allQueries = grid.flatMap((pt) => [
-      ...SCRAPER_CONFIG.PLACE_TYPES.map((t) => ({ pt, query: t, isKeyword: false })),
-      ...SCRAPER_CONFIG.KEYWORDS.map((kw) => ({ pt, query: kw, isKeyword: true })),
-    ]);
-
-    let sinceLastFlush = 0;
-
-    for (const { pt, query, isKeyword } of allQueries) {
-      if (this.shouldPause) {
-        await this.flushJob(job, processedSet, placeIdSet, null);
-        job.status = ScrapeJobStatus.PAUSED;
-        await this.jobRepo.save(job);
-        return;
-      }
-
-      const key = `${pt.lat},${pt.lon}:${isKeyword ? 'kw:' : ''}${query}`;
-      if (processedSet.has(key)) continue;
-
-      try {
-        const results = await this.client.nearbySearchAll(pt.lat, pt.lon, query, isKeyword);
-        for (const r of results) placeIdSet.add(r.place_id);
-        processedSet.add(key);
-        sinceLastFlush++;
-      } catch (err: unknown) {
-        const error = err instanceof Error ? err.message : String(err);
-        await this.errorRepo.save(
-          this.errorRepo.create({ scrapeJob: job, queryKey: key, error }),
-        );
-      }
-
-      if (sinceLastFlush >= 50) {
-        await this.flushJob(job, processedSet, placeIdSet, null);
-        sinceLastFlush = 0;
-      }
-    }
-
-    await this.flushJob(job, processedSet, placeIdSet, null);
-    this.logger.log(`Phase 1 terminée: ${placeIdSet.size} IDs collectés`);
-  }
-
-  private async runPhase2(job: ScrapeJob): Promise<void> {
-    const enrichedSet = new Set(job.enrichedIds);
-    const unenriched = job.collectedIds.filter((id) => !enrichedSet.has(id));
-
-    this.logger.log(`Phase 2: ${unenriched.length} entités à enrichir`);
-    let sinceLastFlush = 0;
-
-    for (const placeId of unenriched) {
-      if (this.shouldPause) {
-        await this.flushJob(job, null, null, enrichedSet);
-        job.status = ScrapeJobStatus.PAUSED;
-        await this.jobRepo.save(job);
-        return;
-      }
-
-      try {
-        const details = await this.client.getPlaceDetails(placeId);
-        if (details) {
-          await this.placesService.upsert({
-            placeId: details.place_id,
-            name: details.name,
-            formattedAddress: details.formatted_address,
-            phoneNumber: details.formatted_phone_number,
-            internationalPhoneNumber: details.international_phone_number,
-            website: details.website,
-            rating: details.rating,
-            userRatingsTotal: details.user_ratings_total,
-            types: details.types,
-            lat: details.geometry?.location.lat,
-            lng: details.geometry?.location.lng,
-            vicinity: details.vicinity,
-            googleMapsUrl: details.url,
-            businessStatus: details.business_status,
-            openingHours: details.opening_hours ?? null,
-            scrapedAt: new Date(),
-          });
-        }
-        enrichedSet.add(placeId);
-        sinceLastFlush++;
-      } catch (err: unknown) {
-        const error = err instanceof Error ? err.message : String(err);
-        await this.errorRepo.save(
-          this.errorRepo.create({ scrapeJob: job, queryKey: placeId, error }),
-        );
-      }
-
-      if (sinceLastFlush >= 50) {
-        await this.flushJob(job, null, null, enrichedSet);
-        sinceLastFlush = 0;
-      }
-    }
-
-    await this.flushJob(job, null, null, enrichedSet);
-    this.logger.log(`Phase 2 terminée: ${enrichedSet.size} entités sauvegardées`);
-  }
-
-  private async flushJob(
-    job: ScrapeJob,
-    processedSet: Set<string> | null,
-    placeIdSet: Set<string> | null,
-    enrichedSet: Set<string> | null,
-  ): Promise<void> {
-    if (processedSet !== null) {
-      job.processedQueryKeys = Array.from(processedSet);
-      job.processedQueriesCount = processedSet.size;
-    }
-    if (placeIdSet !== null) {
-      job.collectedIds = Array.from(placeIdSet);
-      job.collectedPlaceIdsCount = placeIdSet.size;
-    }
-    if (enrichedSet !== null) {
-      job.enrichedIds = Array.from(enrichedSet);
-      job.enrichedPlaceIdsCount = enrichedSet.size;
-    }
-    job.lastUpdatedAt = new Date();
-    await this.jobRepo.save(job);
   }
 }

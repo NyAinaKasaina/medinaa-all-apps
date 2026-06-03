@@ -11,9 +11,9 @@ import { ScrapeError } from './scrape-error.entity';
 export enum ScrapeJobStatus {
   PENDING = 'pending',
   RUNNING = 'running',
-  PAUSED = 'paused',
-  DONE = 'done',
-  FAILED = 'failed',
+  PAUSED  = 'paused',
+  DONE    = 'done',
+  FAILED  = 'failed',
 }
 
 @Entity('scrape_jobs')
@@ -24,30 +24,11 @@ export class ScrapeJob {
   @Column({ type: 'varchar', default: ScrapeJobStatus.PENDING })
   status: ScrapeJobStatus;
 
-  @Column({ type: 'smallint', default: 1 })
-  phase: number;
+  @Column({ default: 0, name: 'total_nodes' })
+  totalNodes: number;
 
-  @Column({ name: 'total_queries', default: 0 })
-  totalQueries: number;
-
-  @Column({ name: 'processed_queries_count', default: 0 })
-  processedQueriesCount: number;
-
-  @Column({ name: 'collected_place_ids_count', default: 0 })
-  collectedPlaceIdsCount: number;
-
-  @Column({ name: 'enriched_place_ids_count', default: 0 })
-  enrichedPlaceIdsCount: number;
-
-  // Tableaux pour la reprise — mis à jour toutes les 50 itérations
-  @Column('text', { array: true, name: 'processed_query_keys', default: [] })
-  processedQueryKeys: string[];
-
-  @Column('text', { array: true, name: 'collected_ids', default: [] })
-  collectedIds: string[];
-
-  @Column('text', { array: true, name: 'enriched_ids', default: [] })
-  enrichedIds: string[];
+  @Column({ default: 0, name: 'saved_nodes' })
+  savedNodes: number;
 
   @Column({ nullable: true, name: 'started_at' })
   startedAt: Date;

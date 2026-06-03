@@ -13,32 +13,26 @@ export class MedicalEntity {
   id: string;
 
   @Index({ unique: true })
-  @Column({ name: 'place_id' })
-  placeId: string;
+  @Column({ name: 'osm_id' })
+  osmId: string;
 
-  @Column()
-  name: string;
-
-  @Column({ nullable: true, name: 'formatted_address' })
-  formattedAddress: string;
-
-  @Column({ nullable: true, name: 'phone_number' })
-  phoneNumber: string;
-
-  @Column({ nullable: true, name: 'international_phone_number' })
-  internationalPhoneNumber: string;
+  @Column({ name: 'osm_type' })
+  osmType: string;
 
   @Column({ nullable: true })
-  website: string;
+  name: string;
 
-  @Column({ type: 'real', nullable: true })
-  rating: number;
+  @Column({ nullable: true, name: 'name_mg' })
+  nameMg: string;
 
-  @Column({ nullable: true, name: 'user_ratings_total' })
-  userRatingsTotal: number;
+  @Column({ nullable: true })
+  amenity: string;
 
-  @Column('text', { array: true, nullable: true })
-  types: string[];
+  @Column({ nullable: true })
+  healthcare: string;
+
+  @Column({ nullable: true, name: 'health_facility_type' })
+  healthFacilityType: string;
 
   @Column({ type: 'double precision', nullable: true })
   lat: number;
@@ -47,16 +41,46 @@ export class MedicalEntity {
   lng: number;
 
   @Column({ nullable: true })
-  vicinity: string;
+  phone: string;
 
-  @Column({ nullable: true, name: 'google_maps_url' })
-  googleMapsUrl: string;
+  @Column({ nullable: true })
+  website: string;
 
-  @Column({ nullable: true, name: 'business_status' })
-  businessStatus: string;
+  @Column({ nullable: true, name: 'opening_hours' })
+  openingHours: string;
 
-  @Column({ type: 'jsonb', nullable: true, name: 'opening_hours' })
-  openingHours: { open_now?: boolean; weekday_text?: string[] } | null;
+  @Column({ nullable: true, name: 'addr_street' })
+  addrStreet: string;
+
+  @Column({ nullable: true, name: 'addr_housenumber' })
+  addrHousenumber: string;
+
+  @Column({ nullable: true, name: 'addr_city' })
+  addrCity: string;
+
+  @Column({ nullable: true, name: 'addr_district' })
+  addrDistrict: string;
+
+  @Column({ nullable: true, name: 'addr_province' })
+  addrProvince: string;
+
+  @Column({ nullable: true })
+  operator: string;
+
+  @Column({ nullable: true, name: 'operator_type' })
+  operatorType: string;
+
+  @Column({ nullable: true })
+  beds: number;
+
+  @Column({ nullable: true })
+  emergency: boolean;
+
+  @Column({ nullable: true, name: 'osm_url' })
+  osmUrl: string;
+
+  @Column({ type: 'jsonb', nullable: true })
+  tags: Record<string, string>;
 
   @Column({ nullable: true, name: 'scraped_at' })
   scrapedAt: Date;

@@ -139,27 +139,15 @@ export function DashboardPage() {
                   <Badge variant={JOB_STATUS_STYLES[job.status]?.variant ?? 'secondary'}>
                     {JOB_STATUS_STYLES[job.status]?.label ?? job.status}
                   </Badge>
-                  <span className="text-xs text-slate-400">Phase {job.phase}</span>
+                  <span className="text-xs text-slate-400">Overpass OSM</span>
                 </div>
 
-                <div className="space-y-2.5">
-                  <div>
-                    <div className="flex justify-between text-xs text-slate-500 mb-1">
-                      <span>Phase 1 — Requêtes</span>
-                      <span>{formatNumber(job.processedQueriesCount)}/{formatNumber(job.totalQueries)}</span>
-                    </div>
-                    <Progress value={job.totalQueries ? (job.processedQueriesCount / job.totalQueries) * 100 : 0} />
+                <div className="space-y-1.5">
+                  <div className="flex justify-between text-xs text-slate-500 mb-1">
+                    <span>Entités sauvegardées</span>
+                    <span>{formatNumber(job.savedNodes)} / {formatNumber(job.totalNodes)}</span>
                   </div>
-                  <div>
-                    <div className="flex justify-between text-xs text-slate-500 mb-1">
-                      <span>Phase 2 — Entités enrichies</span>
-                      <span>{formatNumber(job.enrichedPlaceIdsCount)}/{formatNumber(job.collectedPlaceIdsCount)}</span>
-                    </div>
-                    <Progress
-                      value={job.collectedPlaceIdsCount ? (job.enrichedPlaceIdsCount / job.collectedPlaceIdsCount) * 100 : 0}
-                      indicatorClassName="bg-teal-500"
-                    />
-                  </div>
+                  <Progress value={job.totalNodes ? (job.savedNodes / job.totalNodes) * 100 : 0} />
                 </div>
 
                 {stats && (

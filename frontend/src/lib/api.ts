@@ -2,21 +2,29 @@ const BASE = '/api'
 
 export interface MedicalEntity {
   id: string
-  placeId: string
-  name: string
-  formattedAddress?: string
-  phoneNumber?: string
-  internationalPhoneNumber?: string
-  website?: string
-  rating?: number
-  userRatingsTotal?: number
-  types?: string[]
+  osmId: string
+  osmType: string
+  name?: string
+  nameMg?: string
+  amenity?: string
+  healthcare?: string
+  healthFacilityType?: string
   lat?: number
   lng?: number
-  vicinity?: string
-  googleMapsUrl?: string
-  businessStatus?: string
-  openingHours?: { open_now?: boolean; weekday_text?: string[] }
+  phone?: string
+  website?: string
+  openingHours?: string
+  addrStreet?: string
+  addrHousenumber?: string
+  addrCity?: string
+  addrDistrict?: string
+  addrProvince?: string
+  operator?: string
+  operatorType?: string
+  beds?: number
+  emergency?: boolean
+  osmUrl?: string
+  tags?: Record<string, string>
   scrapedAt?: string
   createdAt: string
   updatedAt: string
@@ -48,11 +56,8 @@ export interface ScrapeError {
 export interface ScrapeJob {
   id: string
   status: 'pending' | 'running' | 'paused' | 'done' | 'failed'
-  phase: number
-  totalQueries: number
-  processedQueriesCount: number
-  collectedPlaceIdsCount: number
-  enrichedPlaceIdsCount: number
+  totalNodes: number
+  savedNodes: number
   startedAt?: string
   lastUpdatedAt?: string
   createdAt: string
@@ -75,11 +80,11 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   places: {
-    list: (params: { q?: string; type?: string; status?: string; page?: number; limit?: number } = {}) => {
+    list: (params: { q?: string; type?: string; city?: string; page?: number; limit?: number } = {}) => {
       const q = new URLSearchParams()
-      if (params.q) q.set('q', params.q)
+      if (params.q)    q.set('q',    params.q)
       if (params.type) q.set('type', params.type)
-      if (params.status) q.set('status', params.status)
+      if (params.city) q.set('city', params.city)
       if (params.page) q.set('page', String(params.page))
       if (params.limit) q.set('limit', String(params.limit))
       return request<PlacesResponse>(`${BASE}/places?${q}`)
@@ -89,12 +94,12 @@ export const api = {
   },
   scraper: {
     status: () => request<{ job: ScrapeJob | null }>(`${BASE}/scraper/status`).then(r => r.job),
-    jobs: () => request<ScrapeJob[]>(`${BASE}/scraper/jobs`),
-    start: () => request<{ job: ScrapeJob; message: string }>(`${BASE}/scraper/start`, { method: 'POST' }),
-    pause: () => request<{ message: string }>(`${BASE}/scraper/pause`, { method: 'POST' }),
+    jobs:   () => request<ScrapeJob[]>(`${BASE}/scraper/jobs`),
+    start:  () => request<{ job: ScrapeJob; message: string }>(`${BASE}/scraper/start`, { method: 'POST' }),
+    pause:  () => request<{ message: string }>(`${BASE}/scraper/pause`, { method: 'POST' }),
   },
   export: {
     jsonUrl: `${BASE}/export/json`,
-    csvUrl: `${BASE}/export/csv`,
+    csvUrl:  `${BASE}/export/csv`,
   },
 }

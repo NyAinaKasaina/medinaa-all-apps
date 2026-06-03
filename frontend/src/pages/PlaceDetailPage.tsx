@@ -1,24 +1,11 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, MapPin, Phone, Globe, Clock, ExternalLink, AlertCircle } from 'lucide-react'
+import { ArrowLeft, MapPin, Phone, Globe, Clock, ExternalLink, AlertCircle, Bed, Stethoscope } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TypeBadge, primaryType } from '@/components/places/TypeBadge'
-import { RatingStars } from '@/components/places/RatingStars'
 import { api } from '@/lib/api'
-import { cn } from '@/lib/utils'
-
-const STATUS_STYLES: Record<string, string> = {
-  OPERATIONAL:        'text-emerald-700 bg-emerald-50',
-  CLOSED_TEMPORARILY: 'text-amber-700 bg-amber-50',
-  CLOSED_PERMANENTLY: 'text-red-700 bg-red-50',
-}
-const STATUS_LABELS: Record<string, string> = {
-  OPERATIONAL:        'Ouvert',
-  CLOSED_TEMPORARILY: 'Fermé temporairement',
-  CLOSED_PERMANENTLY: 'Fermé définitivement',
-}
 
 export function PlaceDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -29,6 +16,16 @@ export function PlaceDetailPage() {
     queryFn: () => api.places.get(id!),
     enabled: !!id,
   })
+
+  const type = place ? primaryType(place) : undefined
+  const displayName = place?.name ?? place?.nameMg ?? '(Sans nom)'
+  const fullAddress = [
+    place?.addrHousenumber,
+    place?.addrStreet,
+    place?.addrCity,
+    place?.addrDistrict,
+    place?.addrProvince,
+  ].filter(Boolean).join(', ')
 
   return (
     <div className="space-y-5">
@@ -56,42 +53,30 @@ export function PlaceDetailPage() {
 
       {place && (
         <>
-          {/* Header */}
           <div className="space-y-2">
             <div className="flex flex-wrap gap-2 items-center">
-              {primaryType(place.types) && <TypeBadge type={primaryType(place.types)!} />}
-              {place.businessStatus && (
-                <span className={cn('text-xs font-medium px-2.5 py-0.5 rounded-full', STATUS_STYLES[place.businessStatus] ?? 'bg-slate-100 text-slate-600')}>
-                  {STATUS_LABELS[place.businessStatus] ?? place.businessStatus}
-                </span>
+              {type && <TypeBadge type={type} />}
+              {place.emergency && (
+                <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-red-100 text-red-700">Urgences 24h</span>
+              )}
+              {place.operatorType && (
+                <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600">{place.operatorType}</span>
               )}
             </div>
-            <h1 className="text-2xl font-bold text-slate-900">{place.name}</h1>
-            {place.rating != null && (
-              <RatingStars rating={place.rating} count={place.userRatingsTotal} size="md" />
+            <h1 className="text-2xl font-bold text-slate-900">{displayName}</h1>
+            {place.nameMg && place.name && (
+              <p className="text-sm text-slate-500 italic">{place.nameMg}</p>
             )}
           </div>
 
-          {/* Info card */}
           <Card>
             <CardContent className="p-4 divide-y divide-slate-100">
-              {(place.formattedAddress ?? place.vicinity) && (
-                <InfoRow icon={MapPin} label="Adresse">
-                  {place.formattedAddress ?? place.vicinity}
-                </InfoRow>
+              {fullAddress && (
+                <InfoRow icon={MapPin} label="Adresse">{fullAddress}</InfoRow>
               )}
-              {place.phoneNumber && (
+              {place.phone && (
                 <InfoRow icon={Phone} label="Téléphone">
-                  <a href={`tel:${place.phoneNumber}`} className="text-emerald-600 hover:underline">
-                    {place.phoneNumber}
-                  </a>
-                </InfoRow>
-              )}
-              {place.internationalPhoneNumber && place.internationalPhoneNumber !== place.phoneNumber && (
-                <InfoRow icon={Phone} label="International">
-                  <a href={`tel:${place.internationalPhoneNumber}`} className="text-emerald-600 hover:underline">
-                    {place.internationalPhoneNumber}
-                  </a>
+                  <a href={`tel:${place.phone}`} className="text-emerald-600 hover:underline">{place.phone}</a>
                 </InfoRow>
               )}
               {place.website && (
@@ -101,45 +86,36 @@ export function PlaceDetailPage() {
                   </a>
                 </InfoRow>
               )}
-              {place.openingHours?.weekday_text && place.openingHours.weekday_text.length > 0 && (
-                <InfoRow icon={Clock} label="Horaires" align="start">
-                  <div className="space-y-0.5">
-                    {place.openingHours.weekday_text.map((line, i) => (
-                      <p key={i} className="text-sm text-slate-600">{line}</p>
-                    ))}
-                  </div>
+              {place.openingHours && (
+                <InfoRow icon={Clock} label="Horaires">
+                  <span className="font-mono text-sm">{place.openingHours}</span>
                 </InfoRow>
+              )}
+              {place.operator && (
+                <InfoRow icon={Stethoscope} label="Opérateur">{place.operator}</InfoRow>
+              )}
+              {place.beds && (
+                <InfoRow icon={Bed} label="Capacité">{place.beds} lits</InfoRow>
               )}
             </CardContent>
           </Card>
 
-          {/* All types */}
-          {(place.types?.length ?? 0) > 1 && (
-            <div className="flex flex-wrap gap-1.5">
-              {place.types!.map(t => <TypeBadge key={t} type={t} />)}
-            </div>
-          )}
-
-          {/* Google Maps button */}
-          {(place.googleMapsUrl ?? (place.lat && place.lng)) && (
-            <a
-              href={place.googleMapsUrl ?? `https://maps.google.com/?q=${place.lat},${place.lng}`}
-              target="_blank"
-              rel="noreferrer"
-              className="w-full"
-            >
+          {place.osmUrl && (
+            <a href={place.osmUrl} target="_blank" rel="noreferrer">
               <Button variant="outline" className="w-full">
                 <ExternalLink className="w-4 h-4" />
-                Voir sur Google Maps
+                Voir sur OpenStreetMap
               </Button>
             </a>
           )}
 
-          {/* Coordinates */}
           {place.lat && place.lng && (
-            <p className="text-xs text-slate-400 text-center">
-              {place.lat.toFixed(6)}, {place.lng.toFixed(6)}
-            </p>
+            <a href={`https://maps.google.com/?q=${place.lat},${place.lng}`} target="_blank" rel="noreferrer">
+              <Button variant="ghost" size="sm" className="w-full text-slate-400">
+                <MapPin className="w-3.5 h-3.5" />
+                {place.lat.toFixed(6)}, {place.lng.toFixed(6)}
+              </Button>
+            </a>
           )}
         </>
       )}
@@ -147,20 +123,10 @@ export function PlaceDetailPage() {
   )
 }
 
-function InfoRow({
-  icon: Icon,
-  label,
-  children,
-  align = 'center',
-}: {
-  icon: React.ElementType
-  label: string
-  children: React.ReactNode
-  align?: 'center' | 'start'
-}) {
+function InfoRow({ icon: Icon, label, children }: { icon: React.ElementType; label: string; children: React.ReactNode }) {
   return (
-    <div className={`flex gap-3 py-3 first:pt-0 last:pb-0 ${align === 'start' ? 'items-start' : 'items-center'}`}>
-      <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0">
+    <div className="flex gap-3 py-3 first:pt-0 last:pb-0 items-start">
+      <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0 mt-0.5">
         <Icon className="w-4 h-4 text-slate-400" />
       </div>
       <div className="flex-1 min-w-0">

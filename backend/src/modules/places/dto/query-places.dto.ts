@@ -3,20 +3,20 @@ import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class QueryPlacesDto {
-  @ApiPropertyOptional({ description: 'Recherche full-text (nom, adresse, vicinity)' })
+  @ApiPropertyOptional({ description: 'Recherche sur le nom' })
   @IsOptional()
   @IsString()
   q?: string;
 
-  @ApiPropertyOptional({ description: 'Type Google Places: hospital, pharmacy, doctor, dentist, health' })
+  @ApiPropertyOptional({ description: 'Type: hospital, pharmacy, clinic, doctors, dentist, health_post…' })
   @IsOptional()
   @IsString()
   type?: string;
 
-  @ApiPropertyOptional({ description: 'Statut: OPERATIONAL, CLOSED_TEMPORARILY, CLOSED_PERMANENTLY' })
+  @ApiPropertyOptional({ description: 'Ville (addr_city)' })
   @IsOptional()
   @IsString()
-  status?: string;
+  city?: string;
 
   @ApiPropertyOptional({ default: 1 })
   @IsOptional()
