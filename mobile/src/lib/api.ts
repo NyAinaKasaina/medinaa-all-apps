@@ -24,7 +24,7 @@ async function request<T>(path: string, init?: RequestInit, token?: string | nul
     throw new Error(`${res.status}: ${body}`)
   }
   const text = await res.text()
-  return text ? JSON.parse(text) : null
+  return text ? JSON.parse(text) : (null as unknown as T)
 }
 
 export const api = {
