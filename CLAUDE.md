@@ -8,6 +8,30 @@ Application fullstack pour collecter, stocker et consulter toutes les entités m
 
 ---
 
+## Lancer le projet (dev complet)
+
+```bash
+# Depuis la racine /medinaa — lance les 3 apps en parallèle
+npm run dev
+```
+
+| Stream | App | Port | Hot reload |
+|---|---|---|---|
+| cyan  | Backend NestJS | 3000 | `ts-jest` watch |
+| magenta | Frontend Vite | 5173 | HMR |
+| yellow | Mobile Expo Metro | 8081 | Fast Refresh |
+
+Commandes individuelles si besoin :
+```bash
+npm run dev:backend    # NestJS seul
+npm run dev:frontend   # Vite seul
+npm run dev:mobile     # Expo Metro seul
+```
+
+Prérequis : `npm install` à la racine (installe `concurrently`). PostgreSQL doit tourner (`medinaa` DB).
+
+---
+
 ## Structure du dépôt
 
 ```
