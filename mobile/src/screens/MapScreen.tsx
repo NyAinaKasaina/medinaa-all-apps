@@ -1,6 +1,5 @@
 import React, { useCallback, useMemo, useRef, useState } from 'react'
-import { StyleSheet, View } from 'react-native'
-import MapLibreGL from '@maplibre/maplibre-react-native'
+import { Platform, StyleSheet, Text, View } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 import { useQuery } from '@tanstack/react-query'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -8,17 +7,30 @@ import theme from '@/theme/theme'
 import { api, MedicalEntity } from '@/lib/api'
 import { useCoords } from '@/context/LocationContext'
 import EntityCard from '@/components/entity/EntityCard'
-import GorhomBottomSheet from '@gorhom/bottom-sheet'
 import type { RootStackParamList } from '@/navigation/RootNavigator'
-
-MapLibreGL.setAccessToken(null)
 
 type Nav = NativeStackNavigationProp<RootStackParamList>
 
+function MapScreenWeb() {
+  return (
+    <View style={styles.webFallback}>
+      <Text style={styles.webIcon}>🗺️</Text>
+      <Text style={styles.webTitle}>Carte disponible sur mobile</Text>
+      <Text style={styles.webSub}>Installez l'app sur Android pour accéder à la carte interactive.</Text>
+    </View>
+  )
+}
+
 export default function MapScreen() {
+  if (Platform.OS === 'web') return <MapScreenWeb />
+
+  const MapLibreGL = require('@maplibre/maplibre-react-native').default
+  const GorhomBottomSheet = require('@gorhom/bottom-sheet').default
+  MapLibreGL.setAccessToken(null)
+
   const navigation = useNavigation<Nav>()
   const userCoords = useCoords()
-  const bottomSheetRef = useRef<GorhomBottomSheet>(null)
+  const bottomSheetRef = useRef<any>(null)
   const [selectedEntity, setSelectedEntity] = useState<MedicalEntity | null>(null)
 
   const { data } = useQuery({
@@ -62,7 +74,7 @@ export default function MapScreen() {
     navigation.navigate('EntityDetail', { id: selectedEntity.id })
   }, [selectedEntity, navigation])
 
-  return (
+  return (  // native only — web handled above
     <View style={styles.container}>
       <MapLibreGL.MapView
         style={styles.map}
@@ -143,4 +155,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
   sheet: { padding: theme.spacing.base },
+  webFallback: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: theme.spacing.md, padding: theme.spacing['2xl'], backgroundColor: theme.colors.background },
+  webIcon: { fontSize: 64 },
+  webTitle: { fontSize: theme.typography.fontSize.xl, fontWeight: theme.typography.fontWeight.bold, color: theme.colors.text, textAlign: 'center' },
+  webSub: { fontSize: theme.typography.fontSize.base, color: theme.colors.textSecondary, textAlign: 'center' },
 })

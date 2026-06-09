@@ -1,9 +1,6 @@
 import React from 'react'
-import { StyleSheet, View } from 'react-native'
-import MapLibreGL from '@maplibre/maplibre-react-native'
+import { Linking, Platform, Pressable, StyleSheet, Text, View } from 'react-native'
 import theme from '@/theme/theme'
-
-MapLibreGL.setAccessToken(null)
 
 interface MiniMapProps {
   lat: number
@@ -11,7 +8,21 @@ interface MiniMapProps {
   name?: string
 }
 
-export default function MiniMap({ lat, lng }: MiniMapProps) {
+export default function MiniMap({ lat, lng, name }: MiniMapProps) {
+  if (Platform.OS === 'web') {
+    const osmUrl = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=15/${lat}/${lng}`
+    return (
+      <Pressable onPress={() => Linking.openURL(osmUrl)} style={styles.webFallback}>
+        <Text style={styles.webIcon}>📍</Text>
+        <Text style={styles.webLabel}>{lat.toFixed(5)}, {lng.toFixed(5)}</Text>
+        <Text style={styles.webLink}>Voir sur OpenStreetMap →</Text>
+      </Pressable>
+    )
+  }
+
+  const MapLibreGL = require('@maplibre/maplibre-react-native').default
+  MapLibreGL.setAccessToken(null)
+
   return (
     <View style={styles.container}>
       <MapLibreGL.MapView
@@ -59,4 +70,16 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.base,
   },
   map: { flex: 1 },
+  webFallback: {
+    height: 120,
+    borderRadius: theme.radius.lg,
+    marginTop: theme.spacing.base,
+    backgroundColor: theme.colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.xs,
+  },
+  webIcon: { fontSize: 32 },
+  webLabel: { fontSize: theme.typography.fontSize.sm, color: theme.colors.text },
+  webLink: { fontSize: theme.typography.fontSize.sm, color: theme.colors.primary, fontWeight: theme.typography.fontWeight.semibold },
 })
