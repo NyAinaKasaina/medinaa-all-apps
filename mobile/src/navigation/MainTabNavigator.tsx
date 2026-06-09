@@ -10,7 +10,7 @@ import ProfileScreen from '@/screens/ProfileScreen'
 
 export type MainTabParamList = {
   Home: undefined
-  Search: undefined
+  Search: { type?: string } | undefined
   Map: undefined
   Profile: undefined
 }

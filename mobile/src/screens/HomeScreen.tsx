@@ -6,7 +6,8 @@ import { Ionicons } from '@expo/vector-icons'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
+import type { CompositeNavigationProp } from '@react-navigation/native'
 import theme from '@/theme/theme'
 import { api } from '@/lib/api'
 import { useCoords } from '@/context/LocationContext'
@@ -15,7 +16,10 @@ import Skeleton from '@/components/ui/Skeleton'
 import type { RootStackParamList } from '@/navigation/RootNavigator'
 import type { MainTabParamList } from '@/navigation/MainTabNavigator'
 
-type Nav = NativeStackNavigationProp<RootStackParamList> & BottomTabNavigationProp<MainTabParamList>
+type Nav = CompositeNavigationProp<
+  BottomTabNavigationProp<MainTabParamList, 'Home'>,
+  NativeStackNavigationProp<RootStackParamList>
+>
 
 const CATEGORIES = [
   { key: 'hospital', icon: 'medkit' as const },
@@ -67,12 +71,12 @@ export default function HomeScreen() {
 
   const handleCategoryPress = useCallback((key: string) => {
     const type = key === 'all' ? undefined : OSM_TYPE_MAP[key]
-    navigation.navigate('Search' as any, { type } as any)
+    navigation.navigate('Search', { type })
   }, [navigation])
 
   const goToDetail = useCallback((id: string) => navigation.navigate('EntityDetail', { id }), [navigation])
 
-  const goToMap = useCallback(() => navigation.navigate('Map' as any), [navigation])
+  const goToMap = useCallback(() => navigation.navigate('Map'), [navigation])
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -83,7 +87,7 @@ export default function HomeScreen() {
         </View>
 
         {/* Search bar (tappable, goes to SearchScreen) */}
-        <Pressable onPress={() => navigation.navigate('Search' as any)} style={styles.searchBar}>
+        <Pressable onPress={() => navigation.navigate('Search')} style={styles.searchBar}>
           <Ionicons name="search-outline" size={18} color={theme.colors.textSecondary} />
           <Text style={styles.searchPlaceholder}>{t('home.searchPlaceholder')}</Text>
         </Pressable>
@@ -104,7 +108,7 @@ export default function HomeScreen() {
         {/* Nearby */}
         <View style={styles.sectionRow}>
           <Text style={styles.sectionTitle}>{t('home.nearYou')}</Text>
-          <Pressable onPress={() => navigation.navigate('Search' as any)}>
+          <Pressable onPress={() => navigation.navigate('Search')}>
             <Text style={styles.seeAll}>{t('home.seeAll')}</Text>
           </Pressable>
         </View>
