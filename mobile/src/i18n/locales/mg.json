@@ -9,5 +9,5 @@
   "profile": { "title": "Profily", "claimProgram": "Mitaky ny orinasanao", "claimDesc": "Mitaky ny orinasanao mba handevina ny mombamomba anao", "login": "Hiditra", "register": "Mamorona kaonty", "myFacilities": "Ny orinasako", "noFacilities": "Tsy misy orinasa mitaky", "logout": "Hivoaka" },
   "auth": { "email": "Email", "password": "Teny miafina", "loginTitle": "Hiditra", "registerTitle": "Mamorona kaonty", "loginButton": "Hiditra", "registerButton": "Misoratra", "noAccount": "Tsy misy kaonty?", "hasAccount": "Efa manana kaonty?" },
   "claim": { "title": "Halako ity toera-pahasalamana ity", "description": "Marihina ny mombamomba.", "entityInfo": "Mombamomba ny toera-pahasalamana", "submit": "Halako" },
-  "edit": { "title": "Hanova ny toera-pahasalamana", "phone": "Laingam-pikarohana", "hours": "Ora fiasana", "website": "Tranonkala" }
+  "edit": { "title": "Hanova ny toera-pahasalamana", "phone": "Laingam-pikarohana", "hours": "Ora fiasana", "website": "Tranonkala", "savedSuccessfully": "Vita ny fanavaozana." }
 }

@@ -9,5 +9,5 @@
   "profile": { "title": "Profile", "claimProgram": "Claim Your Facility", "claimDesc": "Claim your facility to manage your information", "login": "Log in", "register": "Create account", "myFacilities": "My facilities", "noFacilities": "No claimed facilities", "logout": "Log out" },
   "auth": { "email": "Email", "password": "Password", "loginTitle": "Log in", "registerTitle": "Create account", "loginButton": "Log in", "registerButton": "Register", "noAccount": "No account?", "hasAccount": "Already have an account?" },
   "claim": { "title": "Claim this facility", "description": "Confirm your information to manage this facility.", "entityInfo": "Facility information", "submit": "Claim" },
-  "edit": { "title": "Edit facility", "phone": "Phone", "hours": "Hours (OSM format: Mo-Fr 08:00-18:00)", "website": "Website" }
+  "edit": { "title": "Edit facility", "phone": "Phone", "hours": "Hours (OSM format: Mo-Fr 08:00-18:00)", "website": "Website", "savedSuccessfully": "Information updated." }
 }

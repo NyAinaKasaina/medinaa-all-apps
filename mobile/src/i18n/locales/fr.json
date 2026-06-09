@@ -9,5 +9,5 @@
   "profile": { "title": "Profil", "claimProgram": "Programme de revendication", "claimDesc": "Revendiquez votre établissement pour gérer vos informations", "login": "Se connecter", "register": "Créer un compte", "myFacilities": "Mes établissements", "noFacilities": "Aucun établissement revendiqué", "logout": "Se déconnecter" },
   "auth": { "email": "Email", "password": "Mot de passe", "loginTitle": "Connexion", "registerTitle": "Créer un compte", "loginButton": "Se connecter", "registerButton": "S'inscrire", "noAccount": "Pas de compte ?", "hasAccount": "Déjà un compte ?" },
   "claim": { "title": "Revendiquer cet établissement", "description": "Confirmez vos informations pour gérer cet établissement.", "entityInfo": "Informations de l'établissement", "submit": "Revendiquer" },
-  "edit": { "title": "Modifier l'établissement", "phone": "Téléphone", "hours": "Horaires (format OSM : Mo-Fr 08:00-18:00)", "website": "Site web" }
+  "edit": { "title": "Modifier l'établissement", "phone": "Téléphone", "hours": "Horaires (format OSM : Mo-Fr 08:00-18:00)", "website": "Site web", "savedSuccessfully": "Informations mises à jour." }
 }
