@@ -56,6 +56,12 @@ export default function MapScreen() {
     [data]
   )
 
+  const handleCardPress = useCallback(() => {
+    if (!selectedEntity) return
+    bottomSheetRef.current?.close()
+    navigation.navigate('EntityDetail', { id: selectedEntity.id })
+  }, [selectedEntity, navigation])
+
   return (
     <View style={styles.container}>
       <MapLibreGL.MapView
@@ -81,30 +87,17 @@ export default function MapScreen() {
           <MapLibreGL.CircleLayer
             id="clusteredCircle"
             filter={['has', 'point_count']}
-            style={{
-              circleRadius: 20,
-              circleColor: theme.colors.primary,
-              circleOpacity: 0.85,
-            }}
+            style={clusterCircleStyle}
           />
           <MapLibreGL.SymbolLayer
             id="clusterCount"
             filter={['has', 'point_count']}
-            style={{
-              textField: ['get', 'point_count'],
-              textSize: 13,
-              textColor: theme.colors.textOnPrimary,
-            }}
+            style={clusterCountStyle}
           />
           <MapLibreGL.CircleLayer
             id="unclustered"
             filter={['!', ['has', 'point_count']]}
-            style={{
-              circleRadius: 8,
-              circleColor: theme.colors.primary,
-              circleStrokeWidth: 2,
-              circleStrokeColor: theme.colors.surface,
-            }}
+            style={unclusteredStyle}
           />
         </MapLibreGL.ShapeSource>
       </MapLibreGL.MapView>
@@ -119,19 +112,32 @@ export default function MapScreen() {
       >
         {selectedEntity && (
           <View style={styles.sheet}>
-            <EntityCard
-              entity={selectedEntity}
-              onPress={() => {
-                bottomSheetRef.current?.close()
-                navigation.navigate('EntityDetail', { id: selectedEntity.id })
-              }}
-            />
+            <EntityCard entity={selectedEntity} onPress={handleCardPress} />
           </View>
         )}
       </GorhomBottomSheet>
     </View>
   )
 }
+
+const clusterCircleStyle = {
+  circleRadius: 20,
+  circleColor: theme.colors.primary,
+  circleOpacity: 0.85,
+} as const
+
+const clusterCountStyle = {
+  textField: ['get', 'point_count'],
+  textSize: 13,
+  textColor: theme.colors.textOnPrimary,
+} as const
+
+const unclusteredStyle = {
+  circleRadius: 8,
+  circleColor: theme.colors.primary,
+  circleStrokeWidth: 2,
+  circleStrokeColor: theme.colors.surface,
+} as const
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
