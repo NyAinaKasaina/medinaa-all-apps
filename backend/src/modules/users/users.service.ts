@@ -18,6 +18,14 @@ export class UsersService {
     return this.repo.findOneBy({ email })
   }
 
+  findByEmailWithPassword(email: string): Promise<User | null> {
+    return this.repo
+      .createQueryBuilder('user')
+      .addSelect('user.passwordHash')
+      .where('user.email = :email', { email })
+      .getOne()
+  }
+
   findById(id: string): Promise<User | null> {
     return this.repo.findOneBy({ id })
   }

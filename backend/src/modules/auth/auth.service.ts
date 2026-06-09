@@ -5,6 +5,9 @@ import { UsersService } from '../users/users.service'
 
 @Injectable()
 export class AuthService {
+  // Pre-computed once to ensure timing-safe login (prevents email enumeration via response time)
+  private static readonly DUMMY_HASH: string = bcrypt.hashSync('__sentinel__', 10)
+
   constructor(private users: UsersService, private jwt: JwtService) {}
 
   async register(email: string, password: string) {
@@ -15,10 +18,10 @@ export class AuthService {
   }
 
   async login(email: string, password: string) {
-    const user = await this.users.findByEmail(email)
-    if (!user) throw new UnauthorizedException('Invalid credentials')
-    const valid = await bcrypt.compare(password, user.passwordHash)
-    if (!valid) throw new UnauthorizedException('Invalid credentials')
+    const user = await this.users.findByEmailWithPassword(email)
+    const hash = user?.passwordHash ?? AuthService.DUMMY_HASH
+    const valid = await bcrypt.compare(password, hash)
+    if (!user || !valid) throw new UnauthorizedException('Invalid credentials')
     return { token: this.sign(user.id, user.email), user: { id: user.id, email: user.email } }
   }
 
