@@ -18,7 +18,7 @@ export default function Skeleton({
   const opacity = useRef(new Animated.Value(0.4)).current
 
   useEffect(() => {
-    Animated.loop(
+    const anim = Animated.loop(
       Animated.sequence([
         Animated.timing(opacity, {
           toValue: 1,
@@ -31,7 +31,9 @@ export default function Skeleton({
           useNativeDriver: true,
         }),
       ])
-    ).start()
+    )
+    anim.start()
+    return () => anim.stop()
   }, [opacity])
 
   return (

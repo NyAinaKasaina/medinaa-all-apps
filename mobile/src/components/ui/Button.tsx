@@ -32,7 +32,7 @@ export default function Button({
       style={({ pressed }) => {
         const dynamicStyles: ViewStyle[] = [
           viewStyles.base,
-          viewStyles[variant as keyof typeof viewStyles],
+          VARIANT_VIEW_STYLES[variant],
         ]
         if (fullWidth) dynamicStyles.push(viewStyles.fullWidth)
         if (pressed || isDisabled) dynamicStyles.push(viewStyles.pressed)
@@ -49,12 +49,7 @@ export default function Button({
           }
         />
       ) : (
-        <Text
-          style={[
-            textStyles.label,
-            textStyles[`${variant}Label` as keyof typeof textStyles],
-          ]}
-        >
+        <Text style={[textStyles.label, VARIANT_TEXT_STYLES[variant]]}>
           {label}
         </Text>
       )}
@@ -85,14 +80,18 @@ const viewStyles = StyleSheet.create({
     backgroundColor: theme.colors.primaryLight,
   },
   outline: {
-    backgroundColor: 'transparent',
     borderWidth: 1.5,
     borderColor: theme.colors.primary,
   },
-  ghost: {
-    backgroundColor: 'transparent',
-  },
+  ghost: {},
 })
+
+const VARIANT_VIEW_STYLES: Record<Variant, ViewStyle> = {
+  primary: viewStyles.primary,
+  secondary: viewStyles.secondary,
+  outline: viewStyles.outline,
+  ghost: viewStyles.ghost,
+}
 
 const textStyles = StyleSheet.create({
   label: {
@@ -112,3 +111,10 @@ const textStyles = StyleSheet.create({
     color: theme.colors.primary,
   },
 })
+
+const VARIANT_TEXT_STYLES: Record<Variant, TextStyle> = {
+  primary: textStyles.primaryLabel,
+  secondary: textStyles.secondaryLabel,
+  outline: textStyles.outlineLabel,
+  ghost: textStyles.ghostLabel,
+}
