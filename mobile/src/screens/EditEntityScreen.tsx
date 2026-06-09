@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useNavigation, useRoute } from '@react-navigation/native'
@@ -32,9 +32,11 @@ export default function EditEntityScreen() {
   const [phone, setPhone] = useState('')
   const [hours, setHours] = useState('')
   const [website, setWebsite] = useState('')
+  const hydrated = useRef(false)
 
   useEffect(() => {
-    if (entity) {
+    if (entity && !hydrated.current) {
+      hydrated.current = true
       setPhone(entity.phone ?? '')
       setHours(entity.openingHours ?? '')
       setWebsite(entity.website ?? '')
@@ -46,8 +48,9 @@ export default function EditEntityScreen() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['entity', entityId] })
       qc.invalidateQueries({ queryKey: ['myPlaces'] })
-      Alert.alert(t('common.save'), t('edit.savedSuccessfully'))
-      navigation.goBack()
+      Alert.alert(t('common.save'), t('edit.savedSuccessfully'), [
+        { text: t('common.ok'), onPress: () => navigation.goBack() },
+      ])
     },
     onError: (e: unknown) => Alert.alert(t('common.error'), e instanceof Error ? e.message : t('common.error')),
   })

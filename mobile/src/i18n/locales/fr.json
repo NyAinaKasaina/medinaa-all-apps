@@ -1,5 +1,5 @@
 {
-  "common": { "loading": "Chargement…", "error": "Erreur", "retry": "Réessayer", "back": "Retour", "close": "Fermer", "save": "Enregistrer", "cancel": "Annuler", "search": "Rechercher", "noResults": "Aucun résultat", "km": "km", "verified": "Établissement vérifié" },
+  "common": { "loading": "Chargement…", "error": "Erreur", "retry": "Réessayer", "back": "Retour", "close": "Fermer", "save": "Enregistrer", "cancel": "Annuler", "ok": "OK", "search": "Rechercher", "noResults": "Aucun résultat", "km": "km", "verified": "Établissement vérifié" },
   "onboarding": { "title": "Bienvenue sur Medinaa", "subtitle": "Trouvez les établissements de santé à Madagascar", "chooseLanguage": "Choisissez votre langue", "locationTitle": "Votre position", "locationReason": "Pour afficher les établissements proches de vous", "allow": "Autoriser", "skip": "Passer", "continue": "Continuer" },
   "home": { "searchPlaceholder": "Chercher un médecin, pharmacie…", "categories": "Catégories", "nearYou": "Près de vous", "recentlyViewed": "Récemment consultés", "viewOnMap": "Voir sur la carte", "seeAll": "Voir tout" },
   "categories": { "hospital": "Hôpital", "pharmacy": "Pharmacie", "clinic": "Clinique", "doctor": "Médecin", "csb": "CSB", "dentist": "Dentiste", "laboratory": "Laboratoire", "emergency": "Urgences", "all": "Tous" },

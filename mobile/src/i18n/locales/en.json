@@ -1,5 +1,5 @@
 {
-  "common": { "loading": "Loading…", "error": "Error", "retry": "Retry", "back": "Back", "close": "Close", "save": "Save", "cancel": "Cancel", "search": "Search", "noResults": "No results", "km": "km", "verified": "Verified facility" },
+  "common": { "loading": "Loading…", "error": "Error", "retry": "Retry", "back": "Back", "close": "Close", "save": "Save", "cancel": "Cancel", "ok": "OK", "search": "Search", "noResults": "No results", "km": "km", "verified": "Verified facility" },
   "onboarding": { "title": "Welcome to Medinaa", "subtitle": "Find health facilities in Madagascar", "chooseLanguage": "Choose your language", "locationTitle": "Your location", "locationReason": "To show facilities near you", "allow": "Allow", "skip": "Skip", "continue": "Continue" },
   "home": { "searchPlaceholder": "Search a doctor, pharmacy…", "categories": "Categories", "nearYou": "Near you", "recentlyViewed": "Recently viewed", "viewOnMap": "View on map", "seeAll": "See all" },
   "categories": { "hospital": "Hospital", "pharmacy": "Pharmacy", "clinic": "Clinic", "doctor": "Doctor", "csb": "Health Center", "dentist": "Dentist", "laboratory": "Laboratory", "emergency": "Emergency", "all": "All" },

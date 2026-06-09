@@ -1,5 +1,5 @@
 {
-  "common": { "loading": "Miandry…", "error": "Hadisoana", "retry": "Avereno", "back": "Hiverina", "close": "Akatona", "save": "Tehiry", "cancel": "Foana", "search": "Hikaroka", "noResults": "Tsy misy valiny", "km": "km", "verified": "Fikambanana voamarina" },
+  "common": { "loading": "Miandry…", "error": "Hadisoana", "retry": "Avereno", "back": "Hiverina", "close": "Akatona", "save": "Tehiry", "cancel": "Foana", "ok": "Eny", "search": "Hikaroka", "noResults": "Tsy misy valiny", "km": "km", "verified": "Fikambanana voamarina" },
   "onboarding": { "title": "Tongasoa amin'i Medinaa", "subtitle": "Hahita ny toeram-pahasalamana eto Madagasikara", "chooseLanguage": "Misafidiana ny fiteny", "locationTitle": "Ny toeranao", "locationReason": "Hanatona ny toeram-pahasalamana akaikin'ny", "allow": "Ekena", "skip": "Tsitsilo", "continue": "Mitohy" },
   "home": { "searchPlaceholder": "Hikaroka dokotera, fanafody…", "categories": "Karazana", "nearYou": "Akaikin'ny toeranao", "recentlyViewed": "Nojerenao vao haingana", "viewOnMap": "Jereo amin'ny sarintany", "seeAll": "Jereo rehetra" },
   "categories": { "hospital": "Hopitaly", "pharmacy": "Farmasia", "clinic": "Klinika", "doctor": "Dokotera", "csb": "CSB", "dentist": "Dentista", "laboratory": "Laboratoara", "emergency": "Maika", "all": "Rehetra" },
