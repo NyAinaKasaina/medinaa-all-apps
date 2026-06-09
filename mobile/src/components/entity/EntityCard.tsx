@@ -23,7 +23,7 @@ export default function EntityCard({ entity, onPress, compact = false }: EntityC
   const userCoords = useCoords()
   const type = entity.amenity ?? entity.healthcare
   const displayName = entity.name ?? '(Sans nom)'
-  const dist = entity.lat && entity.lng
+  const dist = entity.lat != null && entity.lng != null
     ? calcDistance(userCoords.latitude, userCoords.longitude, entity.lat, entity.lng)
     : null
 
