@@ -1,0 +1,13 @@
+{
+  "common": { "loading": "Miandry…", "error": "Hadisoana", "retry": "Avereno", "back": "Hiverina", "close": "Akatona", "save": "Tehiry", "cancel": "Foana", "search": "Hikaroka", "noResults": "Tsy misy valiny", "km": "km", "verified": "Fikambanana voamarina" },
+  "onboarding": { "title": "Tongasoa amin'i Medinaa", "subtitle": "Hahita ny toeram-pahasalamana eto Madagasikara", "chooseLanguage": "Misafidiana ny fiteny", "locationTitle": "Ny toeranao", "locationReason": "Hanatona ny toeram-pahasalamana akaikin'ny", "allow": "Ekena", "skip": "Tsitsilo", "continue": "Mitohy" },
+  "home": { "searchPlaceholder": "Hikaroka dokotera, fanafody…", "categories": "Karazana", "nearYou": "Akaikin'ny toeranao", "recentlyViewed": "Nojerenao vao haingana", "viewOnMap": "Jereo amin'ny sarintany", "seeAll": "Jereo rehetra" },
+  "categories": { "hospital": "Hopitaly", "pharmacy": "Farmasia", "clinic": "Klinika", "doctor": "Dokotera", "csb": "CSB", "dentist": "Dentista", "laboratory": "Laboratoara", "emergency": "Maika", "all": "Rehetra" },
+  "search": { "placeholder": "Hikaroka…", "filters": "Sivana", "type": "Karazana", "city": "Tanàna", "emergencyOnly": "Maika ihany", "results": "valiny" },
+  "detail": { "phone": "Laingam-pikarohana", "hours": "Ora fiasana", "address": "Adiresy", "emergency": "Maika", "beds": "Fandriana", "directions": "Lalana", "openOsm": "Jereo OSM", "claim": "Halako ity toera-pahasalamana ity", "noPhone": "Tsy voasoratra", "noHours": "Tsy voasoratra", "noAddress": "Tsy voasoratra", "noCoords": "Coordinates tsy misy" },
+  "map": { "title": "Sarintany", "nearMe": "Akaikin'izaho" },
+  "profile": { "title": "Profily", "claimProgram": "Tantanin'ny fandraharaha", "claimDesc": "Mpiasa amin'ny fahasalamana ve ianao? Halako ny fandraharaha.", "login": "Hiditra", "register": "Mamorona kaonty", "myFacilities": "Ny toera-pahasalaman'ny", "logout": "Hiala" },
+  "auth": { "email": "Email", "password": "Teny miafina", "loginTitle": "Hiditra", "registerTitle": "Mamorona kaonty", "loginButton": "Hiditra", "registerButton": "Misoratra", "noAccount": "Tsy misy kaonty?", "hasAccount": "Efa manana kaonty?" },
+  "claim": { "title": "Halako ity toera-pahasalamana ity", "description": "Marihina ny mombamomba.", "entityInfo": "Mombamomba ny toera-pahasalamana", "submit": "Halako" },
+  "edit": { "title": "Hanova ny toera-pahasalamana", "phone": "Laingam-pikarohana", "hours": "Ora fiasana", "website": "Tranonkala" }
+}
