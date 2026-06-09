@@ -17,3 +17,7 @@ app/src/main/java/inline/
 
 # Bundle artifacts
 *.jsbundle
+
+# Release keystore — ne jamais committer
+*.jks
+app/medinaa-release.jks
