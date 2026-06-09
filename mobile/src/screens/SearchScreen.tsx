@@ -28,6 +28,7 @@ export default function SearchScreen() {
   const [selectedType, setSelectedType] = useState<string | undefined>(route.params?.type)
   const [emergencyOnly, setEmergencyOnly] = useState(false)
   const debounceRef = React.useRef<ReturnType<typeof setTimeout>>()
+  React.useEffect(() => () => clearTimeout(debounceRef.current), [])
 
   const handleQueryChange = (text: string) => {
     setQuery(text)
