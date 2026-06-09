@@ -32,8 +32,8 @@ export const api = {
     list: (p: { q?: string; type?: string; city?: string; page?: number; limit?: number } = {}) => {
       const qs = new URLSearchParams()
       if (p.q) qs.set('q', p.q); if (p.type) qs.set('type', p.type)
-      if (p.city) qs.set('city', p.city); if (p.page) qs.set('page', String(p.page))
-      if (p.limit) qs.set('limit', String(p.limit))
+      if (p.city) qs.set('city', p.city); if (p.page !== undefined) qs.set('page', String(p.page))
+      if (p.limit !== undefined) qs.set('limit', String(p.limit))
       return request<PlacesResponse>(`/api/places?${qs}`)
     },
     stats: () => request<PlacesStats>('/api/places/stats'),

@@ -32,3 +32,25 @@ describe('api.auth.login', () => {
     await expect(api.auth.login('a@b.com', 'wrong')).rejects.toThrow('401')
   })
 })
+
+describe('api request auth header', () => {
+  it('includes Bearer token when provided', async () => {
+    (global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true, status: 200, text: async () => JSON.stringify([])
+    })
+    await api.places.myPlaces('my-token')
+    const init = (global.fetch as jest.Mock).mock.calls[0][1]
+    expect(init.headers['Authorization']).toBe('Bearer my-token')
+  })
+})
+
+describe('api response parsing', () => {
+  it('returns parsed JSON on success', async () => {
+    const entity = { id: '1', osmId: 'node/1', osmType: 'node', createdAt: '', updatedAt: '' }
+    ;(global.fetch as jest.Mock).mockResolvedValueOnce({
+      ok: true, status: 200, text: async () => JSON.stringify(entity)
+    })
+    const result = await api.places.get('1')
+    expect(result).toEqual(entity)
+  })
+})
