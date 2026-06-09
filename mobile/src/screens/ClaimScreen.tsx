@@ -1,5 +1,5 @@
-import React from 'react'
-import { ScrollView, StyleSheet, Text } from 'react-native'
+import React, { useState } from 'react'
+import { ActivityIndicator, ScrollView, StyleSheet, Text } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useNavigation, useRoute } from '@react-navigation/native'
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
@@ -24,6 +24,7 @@ export default function ClaimScreen() {
   const { token } = useAuth()
   const { entityId } = route.params
   const qc = useQueryClient()
+  const [claimError, setClaimError] = useState<string | null>(null)
 
   const { data: entity } = useQuery({
     queryKey: ['entity', entityId],
@@ -37,9 +38,18 @@ export default function ClaimScreen() {
       qc.invalidateQueries({ queryKey: ['myPlaces'] })
       navigation.navigate('EditEntity', { entityId })
     },
+    onError: (e: unknown) => {
+      setClaimError(e instanceof Error ? e.message : t('common.error'))
+    },
   })
 
-  if (!entity) return null
+  if (!entity) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <ActivityIndicator style={styles.loader} color={theme.colors.primary} />
+      </SafeAreaView>
+    )
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -65,7 +75,10 @@ export default function ClaimScreen() {
             />
           </>
         ) : (
-          <Button label={t('claim.submit')} onPress={() => claim()} loading={isPending} fullWidth />
+          <>
+            {claimError && <Text style={styles.error}>{claimError}</Text>}
+            <Button label={t('claim.submit')} onPress={() => { setClaimError(null); claim() }} loading={isPending} fullWidth />
+          </>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -97,4 +110,6 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
     marginTop: theme.spacing.xs,
   },
+  loader: { flex: 1 },
+  error: { fontSize: theme.typography.fontSize.sm, color: theme.colors.error, marginBottom: theme.spacing.sm, textAlign: 'center' },
 })
