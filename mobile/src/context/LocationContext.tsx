@@ -18,17 +18,21 @@ export function LocationProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<LocationState>({ coords: null, permissionGranted: false, loading: true })
 
   useEffect(() => {
-    Location.requestForegroundPermissionsAsync().then(({ status }) => {
-      if (status !== 'granted') {
-        setState({ coords: null, permissionGranted: false, loading: false })
-        return
-      }
-      Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }).then(loc => {
-        setState({ coords: loc.coords, permissionGranted: true, loading: false })
-      }).catch(() => {
-        setState({ coords: null, permissionGranted: true, loading: false })
+    Location.requestForegroundPermissionsAsync()
+      .then(({ status }) => {
+        if (status !== 'granted') {
+          setState({ coords: null, permissionGranted: false, loading: false })
+          return
+        }
+        Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced }).then(loc => {
+          setState({ coords: loc.coords, permissionGranted: true, loading: false })
+        }).catch(() => {
+          setState({ coords: null, permissionGranted: true, loading: false })
+        })
       })
-    })
+      .catch(() => {
+        setState({ coords: null, permissionGranted: false, loading: false })
+      })
   }, [])
 
   return <LocationContext.Provider value={state}>{children}</LocationContext.Provider>

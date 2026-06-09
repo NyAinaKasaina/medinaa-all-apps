@@ -22,7 +22,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    storage.getToken().then(t => { setToken(t); setIsLoading(false) })
+    storage.getToken()
+      .then(t => { setToken(t); setIsLoading(false) })
+      .catch(() => { setIsLoading(false) })
   }, [])
 
   const login = useCallback(async (email: string, password: string) => {

@@ -9,7 +9,12 @@ jest.mock('@/lib/storage', () => ({
   storage: { getToken: jest.fn().mockResolvedValue(null), setToken: jest.fn(), clearToken: jest.fn() }
 }))
 
-const wrapper = ({ children }: any) => <AuthProvider>{children}</AuthProvider>
+const wrapper = ({ children }: { children: React.ReactNode }) => <AuthProvider>{children}</AuthProvider>
+
+beforeEach(() => {
+  jest.clearAllMocks()
+  ;(storage.getToken as jest.Mock).mockResolvedValue(null)
+})
 
 it('starts with no token', async () => {
   const { result } = renderHook(() => useAuth(), { wrapper })
@@ -31,4 +36,14 @@ it('clears token on logout', async () => {
   await act(async () => { await result.current.login('a@b.com', 'pass') })
   await act(async () => { await result.current.logout() })
   expect(result.current.token).toBeNull()
+})
+
+it('does not set token on failed login', async () => {
+  ;(api.auth.login as jest.Mock).mockRejectedValue(new Error('401: Unauthorized'))
+  const { result } = renderHook(() => useAuth(), { wrapper })
+  await act(async () => {
+    await expect(result.current.login('a@b.com', 'wrong')).rejects.toThrow('401')
+  })
+  expect(result.current.token).toBeNull()
+  expect(storage.setToken).not.toHaveBeenCalled()
 })
