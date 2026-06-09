@@ -1,7 +1,9 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { Body, Controller, Get, Param, Patch, Post, Query, Request, UseGuards } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PlacesService } from './places.service';
 import { QueryPlacesDto } from './dto/query-places.dto';
+import { UpdatePlaceDto } from './dto/update-place.dto';
 
 @ApiTags('places')
 @Controller('places')
@@ -18,6 +20,22 @@ export class PlacesController {
   @ApiOperation({ summary: 'Statistiques globales de la base' })
   stats() {
     return this.service.stats();
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/claim')
+  @ApiOperation({ summary: 'Revendiquer la propriété d\'une entité médicale' })
+  claim(@Param('id') id: string, @Request() req: any) {
+    return this.service.claimPlace(id, req.user.id);
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @Patch(':id')
+  @ApiOperation({ summary: 'Mettre à jour une entité (propriétaire uniquement)' })
+  update(@Param('id') id: string, @Body() dto: UpdatePlaceDto, @Request() req: any) {
+    return this.service.updateByOwner(id, req.user.id, dto);
   }
 
   @Get(':id')

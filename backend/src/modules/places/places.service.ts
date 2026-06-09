@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MedicalEntity } from './entities/medical-entity.entity';
@@ -45,6 +45,24 @@ export class PlacesService {
     const existing = await this.repo.findOneBy({ osmId: data.osmId });
     if (existing) return this.repo.save(Object.assign(existing, data));
     return this.repo.save(this.repo.create(data));
+  }
+
+  async claimPlace(id: string, userId: string): Promise<MedicalEntity> {
+    const entity = await this.repo.findOneByOrFail({ id });
+    if (entity.ownerId) throw new ConflictException('Already claimed');
+    entity.ownerId = userId;
+    return this.repo.save(entity);
+  }
+
+  async updateByOwner(id: string, userId: string, data: Partial<MedicalEntity>): Promise<MedicalEntity> {
+    const entity = await this.repo.findOneByOrFail({ id });
+    if (entity.ownerId !== userId) throw new ForbiddenException('Not the owner');
+    Object.assign(entity, data);
+    return this.repo.save(entity);
+  }
+
+  async getByOwner(userId: string): Promise<MedicalEntity[]> {
+    return this.repo.findBy({ ownerId: userId });
   }
 
   async stats() {

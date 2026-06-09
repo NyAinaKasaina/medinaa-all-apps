@@ -82,6 +82,9 @@ export class MedicalEntity {
   @Column({ type: 'jsonb', nullable: true })
   tags: Record<string, string>;
 
+  @Column({ nullable: true, default: null, name: 'owner_id' })
+  ownerId: string | null;
+
   @Column({ nullable: true, name: 'scraped_at' })
   scrapedAt: Date;
 
