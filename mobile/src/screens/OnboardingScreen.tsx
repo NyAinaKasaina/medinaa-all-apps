@@ -22,18 +22,22 @@ export default function OnboardingScreen() {
 
   const handleLanguageSelect = async (code: string) => {
     setSelectedLang(code)
-    await i18n.changeLanguage(code)
-    await storage.setLanguage(code)
+    try {
+      await i18n.changeLanguage(code)
+      await storage.setLanguage(code)
+    } catch {
+      // best-effort persistence; proceed to next step regardless
+    }
     setStep('location')
   }
 
   const handleLocationAllow = async () => {
-    await Location.requestForegroundPermissionsAsync()
+    await Location.requestForegroundPermissionsAsync().catch(() => {})
     await finish()
   }
 
   const finish = async () => {
-    await storage.setOnboardingDone()
+    await storage.setOnboardingDone().catch(() => {})
     navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] })
   }
 
