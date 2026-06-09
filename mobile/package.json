@@ -3,26 +3,27 @@
   "version": "1.0.0",
   "main": "index.js",
   "dependencies": {
-    "@expo/vector-icons": "^14.1.0",
+    "@expo/vector-icons": "^15.0.2",
     "@gorhom/bottom-sheet": "^5.2.14",
     "@maplibre/maplibre-react-native": "^10.4.2",
-    "@react-native-async-storage/async-storage": "^2.1.0",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "@react-navigation/bottom-tabs": "^6.6.1",
     "@react-navigation/native": "^6.1.18",
     "@react-navigation/native-stack": "^6.11.0",
     "@tanstack/react-query": "^5.101.0",
     "expo": "~56.0.9",
-    "expo-location": "~18.0.4",
-    "expo-secure-store": "~14.0.0",
+    "expo-location": "~56.0.16",
+    "expo-secure-store": "~56.0.4",
     "expo-status-bar": "~56.0.4",
     "i18next": "^24.2.3",
     "react": "19.2.3",
     "react-i18next": "^15.7.4",
     "react-native": "0.85.3",
-    "react-native-gesture-handler": "~2.20.2",
-    "react-native-reanimated": "~3.16.1",
-    "react-native-safe-area-context": "^4.12.0",
-    "react-native-screens": "~4.0.0"
+    "react-native-gesture-handler": "~2.29.0",
+    "react-native-reanimated": "4.3.1",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.25.0",
+    "react-native-worklets": "0.8.3"
   },
   "publishConfig": {
     "executableFiles": [
@@ -35,7 +36,11 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "build:release": "bash scripts/build-release.sh",
+    "build:release:arm64": "bash scripts/build-release.sh --arch arm64-v8a",
+    "build:release:armv7": "bash scripts/build-release.sh --arch armeabi-v7a",
+    "build:release:fat": "bash scripts/build-release.sh --arch \"arm64-v8a,armeabi-v7a\""
   },
   "private": true,
   "devDependencies": {

@@ -8,5 +8,9 @@ backend/data/
 frontend/node_modules/
 frontend/dist/
 
+# Mobile
+mobile/node_modules/
+mobile/releases/*.apk
+
 # OS
 .DS_Store
