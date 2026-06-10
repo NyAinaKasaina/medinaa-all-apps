@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
@@ -115,9 +115,11 @@ export default function HomeScreen() {
 
         {isLoading
           ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} height={80} style={styles.skeletonCard} />)
-          : nearbyEntities.map(e => (
-            <EntityCard key={e.id} entity={e} onPress={() => goToDetail(e.id)} />
-          ))
+          : <View style={styles.nearbyList}>
+              {nearbyEntities.map(e => (
+                <EntityCard key={e.id} entity={e} onPress={() => goToDetail(e.id)} />
+              ))}
+            </View>
         }
         <View style={{ height: theme.spacing['3xl'] }} />
       </ScrollView>
@@ -138,13 +140,14 @@ const styles = StyleSheet.create({
   searchBar: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, backgroundColor: theme.colors.surface, borderRadius: theme.radius.md, paddingHorizontal: theme.spacing.base, paddingVertical: theme.spacing.md, marginHorizontal: theme.spacing.base, marginBottom: theme.spacing.lg, ...theme.shadow.sm },
   searchPlaceholder: { fontSize: theme.typography.fontSize.base, color: theme.colors.textSecondary },
   sectionTitle: { fontSize: theme.typography.fontSize.lg, fontWeight: theme.typography.fontWeight.bold, color: theme.colors.text, paddingHorizontal: theme.spacing.base, marginBottom: theme.spacing.sm },
-  sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingRight: theme.spacing.base, paddingLeft: theme.spacing.base },
+  sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingRight: theme.spacing.base },
   seeAll: { fontSize: theme.typography.fontSize.sm, color: theme.colors.primary, fontWeight: theme.typography.fontWeight.medium },
   categories: { paddingHorizontal: theme.spacing.base, gap: theme.spacing.sm, paddingBottom: theme.spacing.base },
   catBtn: { alignItems: 'center', width: 72 },
   catIcon: { width: 56, height: 56, borderRadius: theme.radius.lg, backgroundColor: theme.colors.primaryLight, alignItems: 'center', justifyContent: 'center', marginBottom: theme.spacing.xs },
   catLabel: { fontSize: theme.typography.fontSize.xs, color: theme.colors.text, textAlign: 'center' },
   skeletonCard: { marginHorizontal: theme.spacing.base, marginBottom: theme.spacing.sm, borderRadius: theme.radius.lg },
+  nearbyList: { paddingHorizontal: theme.spacing.base },
   fab: { position: 'absolute', bottom: theme.spacing.xl, right: theme.spacing.base, flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, backgroundColor: theme.colors.primary, paddingHorizontal: theme.spacing.lg, paddingVertical: theme.spacing.md, borderRadius: theme.radius.full, ...theme.shadow.lg },
   fabLabel: { color: theme.colors.textOnPrimary, fontWeight: theme.typography.fontWeight.semibold, fontSize: theme.typography.fontSize.sm },
 })

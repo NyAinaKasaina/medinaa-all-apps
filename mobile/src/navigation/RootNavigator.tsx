@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { storage } from '@/lib/storage'
@@ -33,12 +33,12 @@ export default function RootNavigator() {
 
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {!onboardingDone ? (
-          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-        ) : (
-          <Stack.Screen name="MainTabs" component={MainTabNavigator} />
-        )}
+      <Stack.Navigator
+        initialRouteName={onboardingDone ? 'MainTabs' : 'Onboarding'}
+        screenOptions={{ headerShown: false }}
+      >
+        <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+        <Stack.Screen name="MainTabs" component={MainTabNavigator} />
         <Stack.Screen name="EntityDetail" component={EntityDetailScreen}
           options={{ headerShown: true, headerTitle: '', headerBackTitle: '' }} />
         <Stack.Screen name="Claim" component={ClaimScreen} />

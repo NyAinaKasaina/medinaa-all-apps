@@ -68,7 +68,7 @@ export default function SearchScreen() {
       </View>
 
       {/* Type filter chips */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsScroll} contentContainerStyle={styles.chips}>
         <Pressable
           onPress={() => setSelectedType(undefined)}
           style={[styles.chip, !selectedType && styles.chipActive]}
@@ -78,7 +78,7 @@ export default function SearchScreen() {
         {TYPE_OPTIONS.map(type => (
           <Pressable key={type} onPress={() => setSelectedType(type === selectedType ? undefined : type)}
             style={[styles.chip, selectedType === type && styles.chipActive]}>
-            <Text style={[styles.chipText, selectedType === type && styles.chipTextActive]}>{type}</Text>
+            <Text style={[styles.chipText, selectedType === type && styles.chipTextActive]}>{t(`categories.${type}`, { defaultValue: type })}</Text>
           </Pressable>
         ))}
         <Pressable onPress={() => setEmergencyOnly(v => !v)}
@@ -118,7 +118,8 @@ const styles = StyleSheet.create({
   inputWrap: { flexDirection: 'row', alignItems: 'center', backgroundColor: theme.colors.surface, borderRadius: theme.radius.md, paddingHorizontal: theme.spacing.base, height: 48, ...theme.shadow.sm },
   searchIcon: { marginRight: theme.spacing.sm },
   input: { flex: 1, fontSize: theme.typography.fontSize.md, color: theme.colors.text },
-  chips: { paddingHorizontal: theme.spacing.base, gap: theme.spacing.xs, paddingBottom: theme.spacing.sm },
+  chipsScroll: { flexShrink: 0 },
+  chips: { paddingHorizontal: theme.spacing.base, paddingVertical: theme.spacing.sm, gap: theme.spacing.xs },
   chip: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: theme.spacing.md, paddingVertical: 6, borderRadius: theme.radius.full, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface },
   chipActive: { backgroundColor: theme.colors.primaryLight, borderColor: theme.colors.primary },
   chipText: { fontSize: theme.typography.fontSize.sm, color: theme.colors.textSecondary },
