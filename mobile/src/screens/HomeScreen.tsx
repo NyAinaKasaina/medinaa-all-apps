@@ -1,4 +1,4 @@
-import { useCallback } from 'react'
+import React, { useCallback } from 'react'
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useNavigation } from '@react-navigation/native'
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   searchBar: { flexDirection: 'row', alignItems: 'center', gap: theme.spacing.sm, backgroundColor: theme.colors.surface, borderRadius: theme.radius.md, paddingHorizontal: theme.spacing.base, paddingVertical: theme.spacing.md, marginHorizontal: theme.spacing.base, marginBottom: theme.spacing.lg, ...theme.shadow.sm },
   searchPlaceholder: { fontSize: theme.typography.fontSize.base, color: theme.colors.textSecondary },
   sectionTitle: { fontSize: theme.typography.fontSize.lg, fontWeight: theme.typography.fontWeight.bold, color: theme.colors.text, paddingHorizontal: theme.spacing.base, marginBottom: theme.spacing.sm },
-  sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingRight: theme.spacing.base },
+  sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingRight: theme.spacing.base, paddingLeft: theme.spacing.base },
   seeAll: { fontSize: theme.typography.fontSize.sm, color: theme.colors.primary, fontWeight: theme.typography.fontWeight.medium },
   categories: { paddingHorizontal: theme.spacing.base, gap: theme.spacing.sm, paddingBottom: theme.spacing.base },
   catBtn: { alignItems: 'center', width: 72 },
