@@ -5,9 +5,12 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { PlacesModule } from './modules/places/places.module';
 import { ScraperModule } from './modules/scraper/scraper.module';
 import { ExportModule } from './modules/export/export.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
 import { MedicalEntity } from './modules/places/entities/medical-entity.entity';
 import { ScrapeJob } from './modules/scraper/entities/scrape-job.entity';
 import { ScrapeError } from './modules/scraper/entities/scrape-error.entity';
+import { User } from './modules/users/user.entity';
 
 @Module({
   imports: [
@@ -22,7 +25,7 @@ import { ScrapeError } from './modules/scraper/entities/scrape-error.entity';
         username: config.getOrThrow('DB_USER'),
         password: config.getOrThrow('DB_PASSWORD'),
         database: config.getOrThrow('DB_NAME'),
-        entities: [MedicalEntity, ScrapeJob, ScrapeError],
+        entities: [MedicalEntity, ScrapeJob, ScrapeError, User],
         migrations: ['dist/migrations/*.js'],
         // synchronize auto-crée les tables en développement
         // Passer à false et utiliser les migrations en production
@@ -36,6 +39,8 @@ import { ScrapeError } from './modules/scraper/entities/scrape-error.entity';
     PlacesModule,
     ScraperModule,
     ExportModule,
+    AuthModule,
+    UsersModule,
   ],
 })
 export class AppModule {}

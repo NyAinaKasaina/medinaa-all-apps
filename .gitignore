@@ -8,6 +8,14 @@ backend/data/
 frontend/node_modules/
 frontend/dist/
 
+# Root
+node_modules/
+package-lock.json
+
+# Mobile
+mobile/node_modules/
+mobile/releases/*.apk
+
 # OS
 .DS_Store
 command.txt

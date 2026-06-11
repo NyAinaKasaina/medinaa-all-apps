@@ -1,0 +1,15 @@
+{
+  "name": "medinaa",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently --kill-others-on-fail --prefix-colors \"cyan,magenta,yellow\" --names \"backend ,frontend,mobile \" \"npm run dev:backend\" \"npm run dev:frontend\" \"npm run dev:mobile\"",
+    "dev:backend": "npm --prefix backend run start:dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev:mobile": "npm --prefix mobile run start",
+    "dev:web": "npm --prefix mobile run web"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

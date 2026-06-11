@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MedicalEntity } from './entities/medical-entity.entity';
 import { QueryPlacesDto } from './dto/query-places.dto';
+import { UpdatePlaceDto } from './dto/update-place.dto';
 
 @Injectable()
 export class PlacesService {
@@ -45,6 +46,26 @@ export class PlacesService {
     const existing = await this.repo.findOneBy({ osmId: data.osmId });
     if (existing) return this.repo.save(Object.assign(existing, data));
     return this.repo.save(this.repo.create(data));
+  }
+
+  async claimPlace(id: string, userId: string): Promise<MedicalEntity> {
+    const entity = await this.repo.findOneBy({ id });
+    if (!entity) throw new NotFoundException(`Entité ${id} introuvable`);
+    if (entity.ownerId) throw new ConflictException('Already claimed');
+    entity.ownerId = userId;
+    return this.repo.save(entity);
+  }
+
+  async updateByOwner(id: string, userId: string, data: UpdatePlaceDto): Promise<MedicalEntity> {
+    const entity = await this.repo.findOneBy({ id });
+    if (!entity) throw new NotFoundException(`Entité ${id} introuvable`);
+    if (entity.ownerId !== userId) throw new ForbiddenException('Not the owner');
+    Object.assign(entity, data);
+    return this.repo.save(entity);
+  }
+
+  async getByOwner(userId: string): Promise<MedicalEntity[]> {
+    return this.repo.findBy({ ownerId: userId });
   }
 
   async stats() {

@@ -8,6 +8,30 @@ Application fullstack pour collecter, stocker et consulter toutes les entités m
 
 ---
 
+## Lancer le projet (dev complet)
+
+```bash
+# Depuis la racine /medinaa — lance les 3 apps en parallèle
+npm run dev
+```
+
+| Stream | App | Port | Hot reload |
+|---|---|---|---|
+| cyan  | Backend NestJS | 3000 | `ts-jest` watch |
+| magenta | Frontend Vite | 5173 | HMR |
+| yellow | Mobile Expo Metro | 8081 | Fast Refresh |
+
+Commandes individuelles si besoin :
+```bash
+npm run dev:backend    # NestJS seul
+npm run dev:frontend   # Vite seul
+npm run dev:mobile     # Expo Metro seul
+```
+
+Prérequis : `npm install` à la racine (installe `concurrently`). PostgreSQL doit tourner (`medinaa` DB).
+
+---
+
 ## Structure du dépôt
 
 ```
@@ -226,3 +250,50 @@ Branche principale : main
 - `26398ef` — initialisation fullstack (NestJS + React + shadcn/ui)
 - `55e32d8` — migration Google Places → OpenStreetMap / Overpass
 - `20414aa` — fallback fichier local si Overpass inaccessible
+
+---
+
+## Mobile — Builds locaux APK
+
+### Dossier `mobile/releases/`
+
+Tous les APKs de release locaux sont déposés dans `mobile/releases/`.  
+Format du nom : `medinaa-v<version>-<arch>-<YYYYMMDD>.apk`  
+Les fichiers `.apk` sont exclus du git (`.gitignore`), le dossier est tracké via `.gitkeep`.
+
+### Script de build
+
+**Commandes npm (depuis `mobile/`) :**
+```bash
+npm run build:release          # arm64-v8a (défaut)
+npm run build:release:arm64    # arm64-v8a explicite
+npm run build:release:armv7    # armeabi-v7a (anciens appareils)
+npm run build:release:fat      # arm64-v8a + armeabi-v7a (APK universel)
+```
+
+**Directement (depuis `mobile/`) :**
+```bash
+bash scripts/build-release.sh
+bash scripts/build-release.sh --arch arm64-v8a
+bash scripts/build-release.sh --arch armeabi-v7a
+bash scripts/build-release.sh --arch "arm64-v8a,armeabi-v7a"
+```
+
+Le script lit la version depuis `app.json`, build avec Gradle, puis copie automatiquement l'APK signé dans `mobile/releases/`.
+
+### Keystore de release
+
+| Champ | Valeur |
+|---|---|
+| Fichier | `mobile/android/app/medinaa-release.jks` (gitignored) |
+| Alias | `medinaa` |
+| Password | `MedinaaProd@2026!` |
+| Validité | 10 000 jours (~2053), RSA 2048 bits |
+| SHA-256 cert | `60:31:7B:8F:...:B2:1B:08:1E` |
+
+> Le `.jks` est exclu du git. Le conserver en lieu sûr (gestionnaire de mots de passe). Sans lui, impossible de mettre à jour l'app sur les appareils existants.
+
+### Prérequis
+- Java 17+, `ANDROID_HOME` défini, NDK 27.1.12297006 installé
+- `mobile/node_modules/` présent (`npm install` depuis `mobile/`)
+- Keystore présent dans `mobile/android/app/medinaa-release.jks`

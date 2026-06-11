@@ -1,0 +1,106 @@
+{
+  "common": {
+    "loading": "Loading…",
+    "error": "Error",
+    "retry": "Retry",
+    "back": "Back",
+    "close": "Close",
+    "save": "Save",
+    "cancel": "Cancel",
+    "ok": "OK",
+    "search": "Search",
+    "noResults": "No results",
+    "km": "km",
+    "verified": "Verified facility"
+  },
+  "onboarding": {
+    "title": "Welcome to Medinaa",
+    "subtitle": "Find health facilities in Madagascar",
+    "chooseLanguage": "Choose your language",
+    "locationTitle": "Your location",
+    "locationReason": "To show facilities near you",
+    "allow": "Allow",
+    "skip": "Skip",
+    "continue": "Continue"
+  },
+  "home": {
+    "searchPlaceholder": "Search a doctor, pharmacy…",
+    "categories": "Categories",
+    "nearYou": "Near you",
+    "recentlyViewed": "Recently viewed",
+    "viewOnMap": "View on map",
+    "seeAll": "See all"
+  },
+  "categories": {
+    "hospital": "Hospital",
+    "pharmacy": "Pharmacy",
+    "clinic": "Clinic",
+    "doctor": "Doctor",
+    "csb": "Health Center",
+    "dentist": "Dentist",
+    "laboratory": "Laboratory",
+    "emergency": "Emergency",
+    "all": "All",
+    "doctors": "Doctors",
+    "health_post": "Health post"
+  },
+  "search": {
+    "placeholder": "Search…",
+    "filters": "Filters",
+    "type": "Type",
+    "city": "City",
+    "emergencyOnly": "Emergency only",
+    "results": "results"
+  },
+  "detail": {
+    "phone": "Phone",
+    "hours": "Hours",
+    "address": "Address",
+    "emergency": "Emergency",
+    "beds": "Beds",
+    "directions": "Directions",
+    "openOsm": "View on OSM",
+    "claim": "Claim this facility",
+    "noPhone": "Not provided",
+    "noHours": "Hours not provided",
+    "noAddress": "Address not provided",
+    "noCoords": "Coordinates unavailable"
+  },
+  "map": {
+    "title": "Map",
+    "nearMe": "Near me"
+  },
+  "profile": {
+    "title": "Profile",
+    "claimProgram": "Claim Your Facility",
+    "claimDesc": "Claim your facility to manage your information",
+    "login": "Log in",
+    "register": "Create account",
+    "myFacilities": "My facilities",
+    "noFacilities": "No claimed facilities",
+    "logout": "Log out"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "loginTitle": "Log in",
+    "registerTitle": "Create account",
+    "loginButton": "Log in",
+    "registerButton": "Register",
+    "noAccount": "No account?",
+    "hasAccount": "Already have an account?"
+  },
+  "claim": {
+    "title": "Claim this facility",
+    "description": "Confirm your information to manage this facility.",
+    "entityInfo": "Facility information",
+    "submit": "Claim"
+  },
+  "edit": {
+    "title": "Edit facility",
+    "phone": "Phone",
+    "hours": "Hours (OSM format: Mo-Fr 08:00-18:00)",
+    "website": "Website",
+    "savedSuccessfully": "Information updated."
+  }
+}
