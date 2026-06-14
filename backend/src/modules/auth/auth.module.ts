@@ -14,7 +14,7 @@ import { JwtStrategy } from './jwt.strategy'
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (cfg: ConfigService) => ({
-        secret: cfg.get<string>('JWT_SECRET', 'medinaa-secret'),
+        secret: cfg.getOrThrow<string>('JWT_SECRET'),
         signOptions: { expiresIn: '30d' },
       }),
     }),
