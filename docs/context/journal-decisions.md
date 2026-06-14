@@ -6,6 +6,18 @@ Format : `## YYYY-MM-DD — Titre` · **Contexte** / **Décision** / **Conséque
 
 ---
 
+## 2026-06-14 — Onglet « Qualité des données » (data cleaning)
+
+**Contexte.** Entrée en phase de data cleaning : besoin d'un tableau de bord visualisant la pertinence/complétude des entités (classifiées ou pas, géolocalisées ou pas). App web admin uniquement.
+
+**Réalisé.**
+- **Backend** : `stats` enrichi de `byStatus` (verified/osm_auto/unverified), `geo` (complétude faritra/distrika/kaominina/fokontany) et `withName`. `query-places` : param `geo=located|missing` (a une région / sans région).
+- **Frontend** : nouvelle page `DataQualityPage` (`/quality`, onglet « Qualité » dans sidebar + bottom nav) : 2 scores en-tête (% classifiées, % géolocalisées), carte Classification (barres cliquables → liste filtrée), entonnoir Géolocalisation (région→district→commune→fokontany + lien « sans région »), complétude des champs. PlacesPage : filtre `geo` (Géolocalisé / Sans région) lu aussi depuis l'URL.
+
+**Vérifié.** Builds OK. API : `stats` renvoie byStatus/geo/withName ; `?geo=missing`=136, `?geo=located`=2041.
+
+---
+
 ## 2026-06-14 — Adaptation UX de l'app web admin au nouveau schéma
 
 **Contexte.** Le schéma enrichi (taxonomie + géo INSTAT) avait l'intégration fonctionnelle de base ; l'UX ne l'exploitait pas pleinement. Périmètre : **app web admin uniquement** (Kasaina gère le mobile). Affichage + filtres, sans nouvelle auth (l'édition/curation inline du type est reportée car elle nécessite une auth admin).
