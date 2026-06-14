@@ -23,6 +23,7 @@ export function PlacesPage() {
   const [distrika, setDistrika] = useState<string | undefined>()
   const [kaominina, setKaominina] = useState<string | undefined>()
   const [status, setStatus] = useState<string>(searchParams.get('status') ?? '')
+  const [geo, setGeo] = useState<string>(searchParams.get('geo') ?? '')
   const [page, setPage] = useState(1)
 
   useEffect(() => {
@@ -31,7 +32,7 @@ export function PlacesPage() {
   }, [search])
 
   const resetPage = useCallback(() => setPage(1), [])
-  useEffect(resetPage, [debouncedSearch, category, type, faritra, distrika, kaominina, status, resetPage])
+  useEffect(resetPage, [debouncedSearch, category, type, faritra, distrika, kaominina, status, geo, resetPage])
 
   const { data: taxonomy } = useTaxonomy()
   const { data: faritraList } = useQuery({ queryKey: ['faritra'], queryFn: api.geo.faritra, staleTime: Infinity })
@@ -50,7 +51,7 @@ export function PlacesPage() {
   const typeOptions = taxonomy?.find(c => c.slug === category)?.types ?? []
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['places', { q: debouncedSearch, category, type, faritra, distrika, kaominina, status, page }],
+    queryKey: ['places', { q: debouncedSearch, category, type, faritra, distrika, kaominina, status, geo, page }],
     queryFn: () => api.places.list({
       q: debouncedSearch || undefined,
       category: category || undefined,
@@ -59,6 +60,7 @@ export function PlacesPage() {
       distrika,
       kaominina,
       status: status || undefined,
+      geo: geo || undefined,
       page,
       limit: 20,
     }),
@@ -151,6 +153,11 @@ export function PlacesPage() {
           <option value="verified">Vérifié</option>
           <option value="osm_auto">Auto (OSM)</option>
         </select>
+        <select className={SELECT} value={geo} onChange={e => setGeo(e.target.value)}>
+          <option value="">Localisation : toutes</option>
+          <option value="located">Géolocalisé</option>
+          <option value="missing">Sans région</option>
+        </select>
       </div>
 
       {isError && (
@@ -182,7 +189,7 @@ export function PlacesPage() {
               </div>
               <p className="text-slate-500 font-medium">Aucun résultat trouvé</p>
               <p className="text-slate-400 text-sm">Essayez d'autres filtres</p>
-              <Button variant="outline" size="sm" onClick={() => { setSearch(''); setCategory(''); setType(undefined); setFaritra(undefined); setDistrika(undefined); setKaominina(undefined); setStatus('') }}>
+              <Button variant="outline" size="sm" onClick={() => { setSearch(''); setCategory(''); setType(undefined); setFaritra(undefined); setDistrika(undefined); setKaominina(undefined); setStatus(''); setGeo('') }}>
                 Réinitialiser les filtres
               </Button>
             </div>

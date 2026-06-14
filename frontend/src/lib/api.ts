@@ -86,10 +86,13 @@ export interface PlacesStats {
   withPhone: number
   withWebsite: number
   withHours: number
+  withName: number
   unverified: number
+  byStatus: Record<string, number>
   byCategory: Record<string, number>
   byType: Record<string, number>
   byFaritra: { code: string; nom: string; count: number }[]
+  geo: { faritra: number; distrika: number; kaominina: number; fokontany: number }
 }
 
 export interface ScrapeError {
@@ -126,7 +129,7 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   places: {
-    list: (params: { q?: string; category?: string; type?: string; faritra?: string; distrika?: string; kaominina?: string; status?: string; city?: string; page?: number; limit?: number } = {}) => {
+    list: (params: { q?: string; category?: string; type?: string; faritra?: string; distrika?: string; kaominina?: string; status?: string; geo?: string; city?: string; page?: number; limit?: number } = {}) => {
       const q = new URLSearchParams()
       if (params.q)          q.set('q',          params.q)
       if (params.category)   q.set('category',   params.category)
@@ -135,6 +138,7 @@ export const api = {
       if (params.distrika)   q.set('distrika',   params.distrika)
       if (params.kaominina)  q.set('kaominina',  params.kaominina)
       if (params.status)     q.set('status',     params.status)
+      if (params.geo)        q.set('geo',        params.geo)
       if (params.city)       q.set('city',       params.city)
       if (params.page)       q.set('page',       String(params.page))
       if (params.limit)      q.set('limit',      String(params.limit))
