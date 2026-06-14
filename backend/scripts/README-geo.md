@@ -37,14 +37,26 @@ node --max-old-space-size=4096 scripts/geo-enrich.cjs
 
 ## Couverture obtenue (2177 entités)
 
-faritra 94% · distrika 91% · kaominina 63% · fokontany 52% (best-effort).
+faritra 94% · distrika 91% · kaominina 65% · fokontany 59% (best-effort).
 
 ## Limites connues
 
 - geoBoundaries = 22 régions (pré-réforme 2021) vs 23 officielles. Région scindée
   Vatovavy-Fitovinany résolue via le district. Haute Matsiatra = « Matsiatra Ambony » (alias).
 - Antananarivo : arrondissements geoBoundaries mappés vers ANTANANARIVO_I..VI.
-- Niveaux fins (commune/fokontany) : 17 465 polygones geoBoundaries ≠ 19 336 fokontany officiels,
-  noms divergents → match partiel par préfixe commun. Une vraie source géométrie+codes officiels
-  (shapefile BNGRC) permettrait 100%.
-- Les ~6% d'entités sans région sont des points hors polygones (coordonnées au large / en bordure).
+- Niveaux fins (commune/fokontany) : 17 465 polygones geoBoundaries (= COD-AB 2018) ≠ 19 336
+  fokontany data-personne (vintage plus récent), noms partiellement divergents → match par
+  préfixe/inclusion de nom (unique). Les ~6% d'entités sans région sont des points hors polygones.
+
+## Pourquoi pas 100% : trois systèmes de codes (investigué le 2026-06-13)
+
+Le seul lien possible entre la géométrie disponible et les codes data-personne est le NOM.
+Aucun pont par code n'existe :
+- **data-personne** : codes INSTAT, 2/4/6/8 chiffres, région Analamanga = `11`.
+- **COD-AB OCHA** (geoBoundaries en dérive) : P-codes par ancienne province, ex. `MG22203090008`.
+- **BNGRC LUT** (`BNGRC_codes_LUT_pcodes_2018.xlsx`) : 3e système, région `4`, fokontany `101001035`.
+
+Les noms COD-AB/BNGRC (une fois normalisés) sont identiques à ceux de geoBoundaries déjà utilisés,
+donc passer par COD-AB n'améliore pas le matching. Pour atteindre ~100%, il faudrait la géométrie
+portant les **codes INSTAT exacts** de data-personne (que data-personne n'a pas : source = PDF BNGRC,
+sans géométrie). Ne pas re-tenter la piste COD-AB sans cette géométrie INSTAT.
