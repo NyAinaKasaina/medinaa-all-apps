@@ -95,18 +95,19 @@ export class MedicalEntity {
   @Column({ name: 'classification_status', default: 'unverified' })
   classificationStatus: string;
 
-  // Hiérarchie géographique (Région > District > Commune > Fokontany)
-  @Column({ type: 'smallint', nullable: true, name: 'region_id' })
-  regionId: number | null;
+  // Hiérarchie géographique — codes officiels INSTAT (faritra > distrika > kaominina > fokontany).
+  // Profondeur variable selon le géocodage (best-effort commune/fokontany).
+  @Column({ type: 'varchar', length: 2, nullable: true, name: 'code_faritra' })
+  codeFaritra: string | null;
 
-  @Column({ type: 'smallint', nullable: true, name: 'district_id' })
-  districtId: number | null;
+  @Column({ type: 'varchar', length: 4, nullable: true, name: 'code_distrika' })
+  codeDistrika: string | null;
 
-  @Column({ type: 'int', nullable: true, name: 'commune_id' })
-  communeId: number | null;
+  @Column({ type: 'varchar', length: 6, nullable: true, name: 'code_kaominina' })
+  codeKaominina: string | null;
 
-  @Column({ type: 'int', nullable: true, name: 'fokontany_id' })
-  fokontanyId: number | null;
+  @Column({ type: 'varchar', length: 8, nullable: true, name: 'code_fokontany' })
+  codeFokontany: string | null;
 
   @Column({ nullable: true, name: 'scraped_at' })
   scrapedAt: Date;

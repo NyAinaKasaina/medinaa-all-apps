@@ -13,9 +13,6 @@ import { ScrapeError } from './modules/scraper/entities/scrape-error.entity';
 import { User } from './modules/users/user.entity';
 import { MedicalCategory } from './modules/taxonomy/entities/medical-category.entity';
 import { MedicalType } from './modules/taxonomy/entities/medical-type.entity';
-import { Region } from './modules/geo/entities/region.entity';
-import { District } from './modules/geo/entities/district.entity';
-import { Commune } from './modules/geo/entities/commune.entity';
 import { Fokontany } from './modules/geo/entities/fokontany.entity';
 import { TaxonomyModule } from './modules/taxonomy/taxonomy.module';
 import { GeoModule } from './modules/geo/geo.module';
@@ -35,8 +32,7 @@ import { GeoModule } from './modules/geo/geo.module';
         database: config.getOrThrow('DB_NAME'),
         entities: [
           MedicalEntity, ScrapeJob, ScrapeError, User,
-          MedicalCategory, MedicalType,
-          Region, District, Commune, Fokontany,
+          MedicalCategory, MedicalType, Fokontany,
         ],
         migrations: ['dist/migrations/*.js'],
         // Réorg du schéma en cours : le schéma est géré par les scripts SQL idempotents

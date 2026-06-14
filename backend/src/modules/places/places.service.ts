@@ -16,7 +16,7 @@ export class PlacesService {
   ) {}
 
   async findAll(query: QueryPlacesDto) {
-    const { page = 1, limit = 50, q, type, category, regionId, districtId, status, city } = query;
+    const { page = 1, limit = 50, q, type, category, faritra, distrika, kaominina, status, city } = query;
 
     const qb = this.repo.createQueryBuilder('e');
 
@@ -30,11 +30,14 @@ export class PlacesService {
       // Nouveau type_slug, avec repli sur les tags OSM legacy pendant la transition.
       qb.andWhere('(e.type_slug = :type OR e.amenity = :type OR e.healthcare = :type)', { type });
     }
-    if (regionId) {
-      qb.andWhere('e.region_id = :regionId', { regionId });
+    if (faritra) {
+      qb.andWhere('e.code_faritra = :faritra', { faritra });
     }
-    if (districtId) {
-      qb.andWhere('e.district_id = :districtId', { districtId });
+    if (distrika) {
+      qb.andWhere('e.code_distrika = :distrika', { distrika });
+    }
+    if (kaominina) {
+      qb.andWhere('e.code_kaominina = :kaominina', { kaominina });
     }
     if (status) {
       qb.andWhere('e.classification_status = :status', { status });

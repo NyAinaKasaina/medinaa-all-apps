@@ -1,21 +1,27 @@
-import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { GeoService } from './geo.service';
 
 @ApiTags('geo')
-@Controller('regions')
+@Controller('geo')
 export class GeoController {
   constructor(private readonly geo: GeoService) {}
 
-  @Get()
-  @ApiOperation({ summary: 'Liste des régions de Madagascar' })
-  regions() {
-    return this.geo.allRegions();
+  @Get('faritra')
+  @ApiOperation({ summary: 'Liste des régions (faritra) : code + nom' })
+  faritra() {
+    return this.geo.faritra();
   }
 
-  @Get(':id/districts')
-  @ApiOperation({ summary: 'Districts d\'une région' })
-  districts(@Param('id', ParseIntPipe) id: number) {
-    return this.geo.districtsOf(id);
+  @Get('distrika')
+  @ApiOperation({ summary: 'Districts (distrika) d\'une région (param faritra=code)' })
+  distrika(@Query('faritra') faritra: string) {
+    return this.geo.distrika(faritra);
+  }
+
+  @Get('kaominina')
+  @ApiOperation({ summary: 'Communes (kaominina) d\'un district (param distrika=code)' })
+  kaominina(@Query('distrika') distrika: string) {
+    return this.geo.kaominina(distrika);
   }
 }

@@ -23,17 +23,20 @@ export class QueryPlacesDto {
   @IsString()
   status?: string;
 
-  @ApiPropertyOptional({ description: 'ID de région' })
+  @ApiPropertyOptional({ description: 'Code faritra (région), ex. 11' })
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  regionId?: number;
+  @IsString()
+  faritra?: string;
 
-  @ApiPropertyOptional({ description: 'ID de district' })
+  @ApiPropertyOptional({ description: 'Code distrika (district), ex. 1101' })
   @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  districtId?: number;
+  @IsString()
+  distrika?: string;
+
+  @ApiPropertyOptional({ description: 'Code kaominina (commune), ex. 110101' })
+  @IsOptional()
+  @IsString()
+  kaominina?: string;
 
   @ApiPropertyOptional({ description: 'Ville (addr_city, legacy)' })
   @IsOptional()

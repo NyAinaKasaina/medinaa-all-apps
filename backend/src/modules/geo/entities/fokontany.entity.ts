@@ -1,21 +1,32 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
-import { Commune } from './commune.entity';
+import { Column, Entity, Index, PrimaryColumn } from 'typeorm';
 
+// Référence géographique dénormalisée (codification officielle INSTAT, structure data-personne).
 @Entity('fokontany')
 export class Fokontany {
-  @PrimaryColumn()
-  id: number;
+  @PrimaryColumn({ name: 'code_fokontany', length: 8 })
+  codeFokontany: string;
 
-  @Column({ name: 'commune_id' })
-  communeId: number;
+  @Index()
+  @Column({ name: 'code_faritra', length: 2 })
+  codeFaritra: string;
 
-  @ManyToOne(() => Commune)
-  @JoinColumn({ name: 'commune_id' })
-  commune: Commune;
+  @Index()
+  @Column({ name: 'code_distrika', length: 4 })
+  codeDistrika: string;
 
-  @Column({ nullable: true })
-  code: string;
+  @Index()
+  @Column({ name: 'code_kaominina', length: 6 })
+  codeKaominina: string;
 
-  @Column()
-  name: string;
+  @Column({ name: 'nom_faritra' })
+  nomFaritra: string;
+
+  @Column({ name: 'nom_distrika' })
+  nomDistrika: string;
+
+  @Column({ name: 'nom_kaominina' })
+  nomKaominina: string;
+
+  @Column({ name: 'nom_fokontany' })
+  nomFokontany: string;
 }
