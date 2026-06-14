@@ -109,6 +109,13 @@ export class MedicalEntity {
   @Column({ type: 'varchar', length: 8, nullable: true, name: 'code_fokontany' })
   codeFokontany: string | null;
 
+  // Enrichissement Google (bootstrap nom/tel/horaires). Seul le place_id est stocké durablement.
+  @Column({ type: 'varchar', nullable: true, name: 'google_place_id' })
+  googlePlaceId: string | null;
+
+  @Column({ nullable: true, name: 'google_enriched_at' })
+  googleEnrichedAt: Date;
+
   @Column({ nullable: true, name: 'scraped_at' })
   scrapedAt: Date;
 

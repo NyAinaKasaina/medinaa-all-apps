@@ -6,6 +6,18 @@ Format : `## YYYY-MM-DD — Titre` · **Contexte** / **Décision** / **Conséque
 
 ---
 
+## 2026-06-14 — Enrichissement Google (bootstrap nom/tel/horaires)
+
+**Contexte.** Combler les gros trous de contact (149/2177 tél) depuis Google Places, en bootstrap ponctuel ; ensuite les propriétaires (comptes à venir) maintiendront la donnée. Champs voulus par Mickael : **nom, téléphone, horaires uniquement**.
+
+**Approche.** Script `backend/scripts/google-enrich.cjs` (clé `GOOGLE_MAPS_API_KEY` dans `.env`). Pour chaque entité nommée : **Nearby Search par rayon strict + mot-clé (nom)** puis filtre par token distinctif du nom (précision), puis Place Details (name, formatted_phone_number, opening_hours). **Comble uniquement les champs vides** (jamais d'écrasement). Stockage durable limité au `google_place_id` (+ `google_enriched_at`), conforme ToS ; nom/tel/horaires transitoires puis owner-maintained. Migration `006`.
+
+**Pilotes (2026-06-14).** Premier jet `Find Place` : appariement bruité (faux homonymes lointains). Passage en Nearby+rayon+filtre de nom → net mieux. Pilote ciblé Analamanga (urbain) : **17/25 appariés, 15 tél + 11 horaires comblés** (~60%/44%). Rural : rendement plus faible (Google peu fourni hors villes). Décision : run complet pertinent (rendement variable selon zone).
+
+**À retenir.** Google couvre bien le médical urbain (Antananarivo), peu le rural. Ne pas étendre aux notes/avis/photos (ToS). Les ~315 entités sans nom ne sont pas recherchables par texte (option `--nameless` = nearby, faible confiance).
+
+---
+
 ## 2026-06-14 — Onglet « Qualité des données » (data cleaning)
 
 **Contexte.** Entrée en phase de data cleaning : besoin d'un tableau de bord visualisant la pertinence/complétude des entités (classifiées ou pas, géolocalisées ou pas). App web admin uniquement.
