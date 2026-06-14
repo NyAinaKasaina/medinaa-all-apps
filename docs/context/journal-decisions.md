@@ -16,7 +16,9 @@ Format : `## YYYY-MM-DD — Titre` · **Contexte** / **Décision** / **Conséque
 
 **Site web (Google, ~12 $).** `scripts/google-website.cjs` : Place Details (champ website) pour les entités appariées → **72 sites comblés** (31 → ~103 avant purge, 82 après).
 
-**Bilan qualité (denominateur 2041, vs début de session à 2177).** Classifiées 30%→**90%** · Géolocalisées 94%→**100%** · Téléphone 7%→**17%** · Horaires 5%→**13%** · Site web 1%→**4%** · Nom **86%**. Plafonds atteints : tél/horaires/site = couverture Google ; commune/fokontany = matching par nom ; noms manquants (295) → claim propriétaires.
+**Extension taxonomie (migration `009`).** Les 212 restants venaient d'un trou de taxo (pas de type « clinique ») + de tags OSM génériques. Ajout de 3 types (soins_proximite) : `clinique_polyclinique`, `maison_repos`, `medecine_traditionnelle`, puis mapping (clinic→clinique 110, nursing_home→maison_repos 15, alternative→medecine_traditionnelle 7). Classifiées **90% → 96%** (unverified 212→**80**). Le frontend lit la taxo en direct (/api/taxonomy) → nouveaux types visibles sans recompiler. **Reste 80 irréductibles** : `healthcare=yes` (50), `health_facility` (20), `counselling` (7)… = tags OSM sans info de type → seuls les propriétaires les qualifieront.
+
+**Bilan qualité (denominateur 2041, vs début de session à 2177).** Classifiées 30%→**96%** · Géolocalisées 94%→**100%** · Téléphone 7%→**17%** · Horaires 5%→**13%** · Site web 1%→**4%** · Nom **86%**. Plafonds atteints : tél/horaires/site = couverture Google ; commune/fokontany = matching par nom ; noms manquants + 80 non classés → claim propriétaires.
 
 ---
 
