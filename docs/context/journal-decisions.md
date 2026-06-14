@@ -6,6 +6,18 @@ Format : `## YYYY-MM-DD — Titre` · **Contexte** / **Décision** / **Conséque
 
 ---
 
+## 2026-06-14 · Carte web : cause racine du « pas affichée » (pré-gate WebGL)
+
+**Contexte.** Après l'ajout de la carte, elle ne s'affichait plus. Premier diagnostic (erroné) : « WebGL désactivé dans l'environnement de Mickael ». Symptôme qui invalide cette piste : « WebGL activé sur Chrome mais carte pas affichée, sur **plusieurs navigateurs** ». Un problème d'environnement WebGL serait résolu en l'activant, et ne serait pas commun à tous les navigateurs.
+
+**Cause racine.** Un **pré-gate `webglAvailable()`** que j'avais ajouté (vérif `canvas.getContext('webgl')` synchrone, exécutée une seule fois au montage via `useState`). S'il renvoie `false` (faux négatif possible), il bascule sur le repli et **bloque la carte sur tous les navigateurs**, quel que soit l'état réel de WebGL. De plus, les vraies erreurs de contexte WebGL de MapLibre arrivent en **asynchrone** via `map.on('error')` (`type: webglcontextcreationerror`), que le code n'écoutait pas : toute erreur était étiquetée « WebGL désactivé ».
+
+**Réalisé.** Suppression du pré-gate. On tente toujours l'init, on écoute `map.on('error')`, on logge la vraie erreur en console et on l'affiche dans le repli (+ bouton « Réessayer »). CSS MapLibre passé en import **global** (`main.tsx`) plutôt que dans le chunk lazy. Réseau vérifié sain le jour même : OpenFreeMap (style/tuile/sprite/glyphs HTTP 200) et `/api/places/geojson` (200). Commit `b58d41b`.
+
+**Leçon.** Ne jamais gater une lib WebGL (MapLibre, three.js) derrière une détection synchrone unique : faux négatif = écran bloqué partout. Tenter l'init, écouter l'event d'erreur, **surfacer la vraie cause** au lieu d'un message générique. Et : « échoue sur plusieurs navigateurs » pointe vers le code/la config, pas vers l'environnement.
+
+---
+
 ## 2026-06-14 — Passe Design/UX : exploiter l'espace horizontal (3 experts)
 
 **Contexte.** Demande : mieux exploiter l'espace horizontal de l'app web. Audit par 3 experts en parallèle (ui-designer `aa8e7fb6b15be1d68`, frontend-developer `a8ec792359099363e`, ux-researcher `a456a3969a6b1c9b2`). Diagnostic unanime : **`AppLayout.tsx:31` plafonnait tout à `max-w-4xl` (896px) centré** → ~46% de largeur gâchée sur 1920px, et pages en colonne unique.
