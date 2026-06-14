@@ -35,7 +35,7 @@ export class PlacesService {
   }
 
   async findAll(query: QueryPlacesDto) {
-    const { page = 1, limit = 50, q, type, category, faritra, distrika, kaominina, status, city } = query;
+    const { page = 1, limit = 50, q, type, category, faritra, distrika, kaominina, status, geo, city } = query;
 
     const qb = this.repo.createQueryBuilder('e');
 
@@ -60,6 +60,11 @@ export class PlacesService {
     }
     if (status) {
       qb.andWhere('e.classification_status = :status', { status });
+    }
+    if (geo === 'located') {
+      qb.andWhere('e.code_faritra IS NOT NULL');
+    } else if (geo === 'missing') {
+      qb.andWhere('e.code_faritra IS NULL');
     }
     if (city) {
       qb.andWhere('e.addr_city ILIKE :city', { city: `%${city}%` });
@@ -157,6 +162,27 @@ export class PlacesService {
     `);
     const byFaritra = byFaritraRows.map((r) => ({ code: r.code, nom: r.nom, count: Number(r.count) }));
 
-    return { total, withPhone, withWebsite, withHours, unverified, byCategory, byType, byFaritra };
+    // Qualité des données : répartition par statut de classification + complétude géo / nom
+    const statusRows: Array<{ status: string; count: string }> = await this.repo.query(
+      `SELECT classification_status AS status, COUNT(*) AS count FROM medical_entities GROUP BY classification_status`,
+    );
+    const byStatus: Record<string, number> = {};
+    for (const r of statusRows) byStatus[r.status] = Number(r.count);
+
+    const q: { faritra: string; distrika: string; kaominina: string; fokontany: string; named: string } = (
+      await this.repo.query(`
+        SELECT
+          COUNT(*) FILTER (WHERE code_faritra   IS NOT NULL) AS faritra,
+          COUNT(*) FILTER (WHERE code_distrika  IS NOT NULL) AS distrika,
+          COUNT(*) FILTER (WHERE code_kaominina IS NOT NULL) AS kaominina,
+          COUNT(*) FILTER (WHERE code_fokontany IS NOT NULL) AS fokontany,
+          COUNT(*) FILTER (WHERE name           IS NOT NULL) AS named
+        FROM medical_entities
+      `)
+    )[0];
+    const geo = { faritra: Number(q.faritra), distrika: Number(q.distrika), kaominina: Number(q.kaominina), fokontany: Number(q.fokontany) };
+    const withName = Number(q.named);
+
+    return { total, withPhone, withWebsite, withHours, withName, unverified, byStatus, byCategory, byType, byFaritra, geo };
   }
 }

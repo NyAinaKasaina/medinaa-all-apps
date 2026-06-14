@@ -23,6 +23,11 @@ export class QueryPlacesDto {
   @IsString()
   status?: string;
 
+  @ApiPropertyOptional({ description: 'Géolocalisation : located (a une région) | missing (sans région)' })
+  @IsOptional()
+  @IsString()
+  geo?: string;
+
   @ApiPropertyOptional({ description: 'Code faritra (région), ex. 11' })
   @IsOptional()
   @IsString()
