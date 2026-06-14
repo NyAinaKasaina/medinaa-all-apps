@@ -6,6 +6,20 @@ Format : `## YYYY-MM-DD — Titre` · **Contexte** / **Décision** / **Conséque
 
 ---
 
+## 2026-06-14 — Adaptation UX de l'app web admin au nouveau schéma
+
+**Contexte.** Le schéma enrichi (taxonomie + géo INSTAT) avait l'intégration fonctionnelle de base ; l'UX ne l'exploitait pas pleinement. Périmètre : **app web admin uniquement** (Kasaina gère le mobile). Affichage + filtres, sans nouvelle auth (l'édition/curation inline du type est reportée car elle nécessite une auth admin).
+
+**Réalisé.**
+- **Backend** (read-only) : `places.service.findOne` renvoie `geo: {faritra/distrika/kaominina/fokontany: {code,nom}}` (résolu via la table fokontany au niveau le plus profond) ; `stats` ajoute `byFaritra`. `export.service` CSV enrichi des colonnes taxonomie + géo (le JSON les avait déjà).
+- **Frontend** : `lib/geo.ts` (`useFaritraLabel`, `prettyGeo`). PlaceDetailPage : fil d'Ariane administratif faritra›distrika›kaominina›fokontany + libellé catégorie + badge « à classifier », adresse OSM reléguée en secondaire. PlacesPage : filtres type (sous-catégorie), commune, statut (+ init `?status=unverified` depuis l'URL). PlaceCard : région officielle + badge « à classifier ». DashboardPage : carte « Répartition par région » + compteur à classifier cliquable. Nettoyage : footer sidebar et colonnes d'export (résidus « Google Places » supprimés).
+
+**Vérifié.** Builds backend + frontend OK. API : `/places/:id` renvoie `geo`, `/places/stats` renvoie `byFaritra` (23), CSV contient les colonnes taxonomie+géo.
+
+**Reste (itération suivante).** Auth admin + édition/assignation du type depuis le web (curation inline des 1521 `unverified`). Vérif visuelle navigateur non faite ici (build + API validés).
+
+---
+
 ## 2026-06-13 — Réorg phase 2 : géographie alignée sur data-personne (codes officiels INSTAT)
 
 **Contexte.** Mickael a pointé le projet `data-personne` comme référence pour la structure géo. Celui-ci utilise la **codification officielle INSTAT** : codes hiérarchiques auto-imbriqués (faritra CHAR(2) < distrika CHAR(4) < kaominina CHAR(6) < fokontany CHAR(8)) dans une table `fokontany` dénormalisée (codes + noms aux 4 niveaux). Sa base `datapersonne` (localhost) contient une référence **complète** : 19 336 fokontany, 1704 communes, 119 districts, 23 régions.
