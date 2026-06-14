@@ -81,6 +81,7 @@ export function ScraperPage() {
         </div>
       )}
 
+      <div className="grid gap-5 lg:grid-cols-2 lg:items-start">
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
@@ -178,6 +179,7 @@ export function ScraperPage() {
           )}
         </CardContent>
       </Card>
+      </div>
     </div>
   )
 }

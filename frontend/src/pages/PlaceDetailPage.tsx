@@ -87,7 +87,8 @@ export function PlaceDetailPage() {
             )}
           </div>
 
-          <Card>
+          <div className="grid gap-5 lg:grid-cols-3 lg:items-start">
+          <Card className="lg:col-span-2">
             <CardContent className="p-4 divide-y divide-slate-100">
               {geoPath.length > 0 && (
                 <InfoRow icon={MapPinned} label="Localisation administrative">
@@ -104,7 +105,7 @@ export function PlaceDetailPage() {
               )}
               {place.website && (
                 <InfoRow icon={Globe} label="Site web">
-                  <a href={place.website} target="_blank" rel="noreferrer" className="text-emerald-600 hover:underline truncate max-w-[220px] inline-block">
+                  <a href={place.website} target="_blank" rel="noreferrer" className="text-emerald-600 hover:underline truncate max-w-full inline-block">
                     {place.website.replace(/^https?:\/\//, '')}
                   </a>
                 </InfoRow>
@@ -123,8 +124,9 @@ export function PlaceDetailPage() {
             </CardContent>
           </Card>
 
+          <div className="space-y-3 lg:sticky lg:top-6">
           {place.osmUrl && (
-            <a href={place.osmUrl} target="_blank" rel="noreferrer">
+            <a href={place.osmUrl} target="_blank" rel="noreferrer" className="block">
               <Button variant="outline" className="w-full">
                 <ExternalLink className="w-4 h-4" />
                 Voir sur OpenStreetMap
@@ -133,13 +135,15 @@ export function PlaceDetailPage() {
           )}
 
           {place.lat && place.lng && (
-            <a href={`https://maps.google.com/?q=${place.lat},${place.lng}`} target="_blank" rel="noreferrer">
+            <a href={`https://maps.google.com/?q=${place.lat},${place.lng}`} target="_blank" rel="noreferrer" className="block">
               <Button variant="ghost" size="sm" className="w-full text-slate-400">
                 <MapPin className="w-3.5 h-3.5" />
                 {place.lat.toFixed(6)}, {place.lng.toFixed(6)}
               </Button>
             </a>
           )}
+          </div>
+          </div>
         </>
       )}
     </div>

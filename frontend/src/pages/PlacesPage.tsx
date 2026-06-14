@@ -11,7 +11,7 @@ import { useTaxonomy } from '@/lib/taxonomy'
 import { prettyGeo } from '@/lib/geo'
 import { cn, formatNumber } from '@/lib/utils'
 
-const SELECT = 'h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-emerald-400 focus:outline-none'
+const SELECT = 'h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 min-w-[150px] focus:border-emerald-400 focus:outline-none'
 
 export function PlacesPage() {
   const [search, setSearch] = useState('')
@@ -168,7 +168,7 @@ export function PlacesPage() {
       )}
 
       {isLoading && (
-        <div className="space-y-3">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="rounded-2xl border border-slate-200 bg-white p-4 space-y-2">
               <Skeleton className="h-4 w-24 rounded-full" />
@@ -194,7 +194,7 @@ export function PlacesPage() {
               </Button>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {data.items.map(place => <PlaceCard key={place.id} place={place} />)}
             </div>
           )}

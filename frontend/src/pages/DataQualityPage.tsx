@@ -56,7 +56,7 @@ export function DataQualityPage() {
         <ScoreCard icon={MapPinned} label="Géolocalisées" value={geolocated} total={total} loading={isLoading} accent="blue" hint="rattachées à une région" />
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Classification */}
         <Card>
           <CardHeader className="pb-3">
@@ -106,15 +106,15 @@ export function DataQualityPage() {
         </Card>
 
         {/* Complétude des champs */}
-        <Card className="md:col-span-2">
+        <Card className="md:col-span-2 lg:col-span-3">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Complétude des champs</CardTitle>
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="grid sm:grid-cols-2 gap-x-6 gap-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}</div>
+              <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-x-6 gap-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}</div>
             ) : (
-              <div className="grid sm:grid-cols-2 gap-x-6 gap-y-3">
+              <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-x-6 gap-y-3">
                 <QualityBar label="Nom" value={stats?.withName ?? 0} total={total} bar="bg-slate-500" />
                 <QualityBar label="Téléphone" value={stats?.withPhone ?? 0} total={total} bar="bg-slate-500" />
                 <QualityBar label="Site web" value={stats?.withWebsite ?? 0} total={total} bar="bg-slate-500" />

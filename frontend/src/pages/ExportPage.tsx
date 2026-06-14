@@ -70,7 +70,7 @@ export function ExportPage() {
       </Card>
 
       {/* Export options */}
-      <div className="space-y-3">
+      <div className="grid gap-3 md:grid-cols-2">
         <ExportCard
           icon={FileJson}
           title="Export JSON"

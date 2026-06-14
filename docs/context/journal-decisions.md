@@ -6,6 +6,23 @@ Format : `## YYYY-MM-DD — Titre` · **Contexte** / **Décision** / **Conséque
 
 ---
 
+## 2026-06-14 — Passe Design/UX : exploiter l'espace horizontal (3 experts)
+
+**Contexte.** Demande : mieux exploiter l'espace horizontal de l'app web. Audit par 3 experts en parallèle (ui-designer `aa8e7fb6b15be1d68`, frontend-developer `a8ec792359099363e`, ux-researcher `a456a3969a6b1c9b2`). Diagnostic unanime : **`AppLayout.tsx:31` plafonnait tout à `max-w-4xl` (896px) centré** → ~46% de largeur gâchée sur 1920px, et pages en colonne unique.
+
+**Réalisé.**
+- **Conteneur** : `max-w-4xl` → `max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8`. `TITLES` complété (/carte, /quality).
+- **Entités** (PlacesPage) : liste de cartes → **grille responsive** `sm:grid-cols-2 xl:grid-cols-3` (+ skeleton). PlaceCard `h-full` (hauteurs égales). Sélecteurs `min-w-[150px]`.
+- **Détail** (PlaceDetailPage) : colonne unique → **2 colonnes** `lg:grid-cols-3` (infos `col-span-2` + panneau actions/coordonnées `lg:sticky`). Lien site `max-w-full`.
+- **Dashboard / Qualité** : grilles `md:grid-cols-2` → `lg:grid-cols-3` ; carte Complétude en 4 barres `xl:grid-cols-4`.
+- **Export / Scraper** : cartes empilées → côte à côte (`md:grid-cols-2` / `lg:grid-cols-2`).
+
+**Reste (reco UX researcher, plus gros refactor).** Pour la data-curation à fort volume : vue **tableau dense** (scanner 2000 lignes) + **master-detail** (liste+détail côte à côte sans navigation) sur PlacesPage. Évolution suivante.
+
+**Vérifié.** Build frontend OK. Rendu visuel à confirmer par Mickael (`npm run dev`).
+
+---
+
 ## 2026-06-14 — Carte interactive (type Google Maps) + plus proche par la route
 
 **Contexte.** Fonctionnalité phare : se géolocaliser, chercher une catégorie ouverte dans un rayon, et obtenir l'itinéraire vers la plus proche. App web (le mobile/Kasaina a déjà sa MapScreen). Le frontend web n'avait aucune carte.

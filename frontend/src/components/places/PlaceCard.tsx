@@ -14,10 +14,10 @@ export function PlaceCard({ place }: { place: MedicalEntity }) {
 
   return (
     <Card
-      className="cursor-pointer hover:shadow-md hover:border-emerald-200 transition-all duration-150 active:scale-[0.99]"
+      className="cursor-pointer hover:shadow-md hover:border-emerald-200 transition-all duration-150 active:scale-[0.99] h-full"
       onClick={() => navigate(`/places/${place.id}`)}
     >
-      <CardContent className="p-4">
+      <CardContent className="p-4 h-full">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-1.5 mb-1.5">

@@ -85,7 +85,7 @@ export function DashboardPage() {
         </div>
       )}
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Types breakdown */}
         <Card>
           <CardHeader className="pb-3">
@@ -141,7 +141,7 @@ export function DashboardPage() {
                 {topFaritra.map(f => (
                   <div key={f.code} className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-medium text-slate-700">{prettyGeo(f.nom)}</span>
+                      <span className="font-medium text-slate-700 truncate pr-2">{prettyGeo(f.nom)}</span>
                       <span className="text-slate-400">{formatNumber(f.count)}</span>
                     </div>
                     <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -158,7 +158,7 @@ export function DashboardPage() {
         </Card>
 
         {/* Scraper status */}
-        <Card>
+        <Card className="md:col-span-2 lg:col-span-1">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Dernier scrape</CardTitle>
           </CardHeader>
