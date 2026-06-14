@@ -126,11 +126,19 @@ export function MapPage() {
   }, [ready, userLoc, radiusKm])
 
   function locate() {
-    if (!navigator.geolocation) { setGeoError('Géolocalisation non supportée'); return }
+    if (!navigator.geolocation) { setGeoError('Géolocalisation non supportée par ce navigateur'); return }
+    setGeoError('Localisation en cours…')
     navigator.geolocation.getCurrentPosition(
       (p) => { const ll: [number, number] = [p.coords.longitude, p.coords.latitude]; setGeoError(null); setUserLoc(ll); mapRef.current?.flyTo({ center: ll, zoom: 13 }) },
-      () => setGeoError('Géolocalisation refusée — autorise-la dans le navigateur'),
-      { enableHighAccuracy: true, timeout: 10_000 },
+      (err) => {
+        const msg = err.code === err.PERMISSION_DENIED
+          ? "Localisation bloquée. Clique l'icône à gauche de l'URL, puis autorise « Localisation » (fonctionne sur localhost, pas sur une IP réseau)."
+          : err.code === err.POSITION_UNAVAILABLE
+            ? 'Position indisponible. Vérifie que la localisation est activée dans ton système.'
+            : 'Délai de localisation dépassé. Réessaie.'
+        setGeoError(msg)
+      },
+      { enableHighAccuracy: false, timeout: 15_000, maximumAge: 60_000 },
     )
   }
 
