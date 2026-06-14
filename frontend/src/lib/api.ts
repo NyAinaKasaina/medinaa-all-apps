@@ -34,6 +34,13 @@ export interface MedicalEntity {
   codeDistrika?: string | null
   codeKaominina?: string | null
   codeFokontany?: string | null
+  // Résolu côté détail uniquement (noms administratifs)
+  geo?: {
+    faritra?: GeoUnit
+    distrika?: GeoUnit
+    kaominina?: GeoUnit
+    fokontany?: GeoUnit
+  } | null
   scrapedAt?: string
   createdAt: string
   updatedAt: string
@@ -82,6 +89,7 @@ export interface PlacesStats {
   unverified: number
   byCategory: Record<string, number>
   byType: Record<string, number>
+  byFaritra: { code: string; nom: string; count: number }[]
 }
 
 export interface ScrapeError {

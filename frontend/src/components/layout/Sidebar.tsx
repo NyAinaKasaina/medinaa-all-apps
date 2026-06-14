@@ -53,7 +53,7 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="px-6 py-4 border-t border-slate-100">
-        <p className="text-xs text-slate-400">v1.0 — Google Places API</p>
+        <p className="text-xs text-slate-400">v1.0 · Données OpenStreetMap</p>
       </div>
     </aside>
   )

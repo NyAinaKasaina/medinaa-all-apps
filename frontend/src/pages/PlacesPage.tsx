@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Search, AlertCircle, Building2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -7,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { PlaceCard } from '@/components/places/PlaceCard'
 import { api } from '@/lib/api'
 import { useTaxonomy } from '@/lib/taxonomy'
+import { prettyGeo } from '@/lib/geo'
 import { cn, formatNumber } from '@/lib/utils'
 
 const SELECT = 'h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-emerald-400 focus:outline-none'
@@ -14,9 +16,13 @@ const SELECT = 'h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm te
 export function PlacesPage() {
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [searchParams] = useSearchParams()
   const [category, setCategory] = useState('')
+  const [type, setType] = useState<string | undefined>()
   const [faritra, setFaritra] = useState<string | undefined>()
   const [distrika, setDistrika] = useState<string | undefined>()
+  const [kaominina, setKaominina] = useState<string | undefined>()
+  const [status, setStatus] = useState<string>(searchParams.get('status') ?? '')
   const [page, setPage] = useState(1)
 
   useEffect(() => {
@@ -25,7 +31,7 @@ export function PlacesPage() {
   }, [search])
 
   const resetPage = useCallback(() => setPage(1), [])
-  useEffect(resetPage, [debouncedSearch, category, faritra, distrika, resetPage])
+  useEffect(resetPage, [debouncedSearch, category, type, faritra, distrika, kaominina, status, resetPage])
 
   const { data: taxonomy } = useTaxonomy()
   const { data: faritraList } = useQuery({ queryKey: ['faritra'], queryFn: api.geo.faritra, staleTime: Infinity })
@@ -35,14 +41,24 @@ export function PlacesPage() {
     enabled: !!faritra,
     staleTime: Infinity,
   })
+  const { data: kaomininaList } = useQuery({
+    queryKey: ['kaominina', distrika],
+    queryFn: () => api.geo.kaominina(distrika!),
+    enabled: !!distrika,
+    staleTime: Infinity,
+  })
+  const typeOptions = taxonomy?.find(c => c.slug === category)?.types ?? []
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['places', { q: debouncedSearch, category, faritra, distrika, page }],
+    queryKey: ['places', { q: debouncedSearch, category, type, faritra, distrika, kaominina, status, page }],
     queryFn: () => api.places.list({
       q: debouncedSearch || undefined,
       category: category || undefined,
+      type,
       faritra,
       distrika,
+      kaominina,
+      status: status || undefined,
       page,
       limit: 20,
     }),
@@ -82,7 +98,7 @@ export function PlacesPage() {
         {chips.map(c => (
           <button
             key={c.slug}
-            onClick={() => setCategory(c.slug)}
+            onClick={() => { setCategory(c.slug); setType(undefined) }}
             className={cn(
               'flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-150 cursor-pointer border',
               category === c.slug
@@ -95,24 +111,45 @@ export function PlacesPage() {
         ))}
       </div>
 
-      {/* Geo filters */}
+      {/* Filtres type + géo + statut */}
       <div className="flex flex-wrap gap-2">
+        {category && (
+          <select className={SELECT} value={type ?? ''} onChange={e => setType(e.target.value || undefined)}>
+            <option value="">Tous les types</option>
+            {typeOptions.map(t => <option key={t.slug} value={t.slug}>{t.labelFr}</option>)}
+          </select>
+        )}
         <select
           className={SELECT}
           value={faritra ?? ''}
-          onChange={e => { const v = e.target.value; setFaritra(v || undefined); setDistrika(undefined) }}
+          onChange={e => { const v = e.target.value; setFaritra(v || undefined); setDistrika(undefined); setKaominina(undefined) }}
         >
           <option value="">Toutes les régions</option>
-          {(faritraList ?? []).map(r => <option key={r.code} value={r.code}>{r.nom}</option>)}
+          {(faritraList ?? []).map(r => <option key={r.code} value={r.code}>{prettyGeo(r.nom)}</option>)}
         </select>
         <select
           className={cn(SELECT, !faritra && 'opacity-50')}
           value={distrika ?? ''}
           disabled={!faritra}
-          onChange={e => { const v = e.target.value; setDistrika(v || undefined) }}
+          onChange={e => { const v = e.target.value; setDistrika(v || undefined); setKaominina(undefined) }}
         >
           <option value="">Tous les districts</option>
-          {(distrikaList ?? []).map(d => <option key={d.code} value={d.code}>{d.nom}</option>)}
+          {(distrikaList ?? []).map(d => <option key={d.code} value={d.code}>{prettyGeo(d.nom)}</option>)}
+        </select>
+        <select
+          className={cn(SELECT, !distrika && 'opacity-50')}
+          value={kaominina ?? ''}
+          disabled={!distrika}
+          onChange={e => setKaominina(e.target.value || undefined)}
+        >
+          <option value="">Toutes les communes</option>
+          {(kaomininaList ?? []).map(k => <option key={k.code} value={k.code}>{prettyGeo(k.nom)}</option>)}
+        </select>
+        <select className={SELECT} value={status} onChange={e => setStatus(e.target.value)}>
+          <option value="">Tout statut</option>
+          <option value="unverified">À classifier</option>
+          <option value="verified">Vérifié</option>
+          <option value="osm_auto">Auto (OSM)</option>
         </select>
       </div>
 
@@ -145,7 +182,7 @@ export function PlacesPage() {
               </div>
               <p className="text-slate-500 font-medium">Aucun résultat trouvé</p>
               <p className="text-slate-400 text-sm">Essayez d'autres filtres</p>
-              <Button variant="outline" size="sm" onClick={() => { setSearch(''); setCategory(''); setFaritra(undefined); setDistrika(undefined) }}>
+              <Button variant="outline" size="sm" onClick={() => { setSearch(''); setCategory(''); setType(undefined); setFaritra(undefined); setDistrika(undefined); setKaominina(undefined); setStatus('') }}>
                 Réinitialiser les filtres
               </Button>
             </div>

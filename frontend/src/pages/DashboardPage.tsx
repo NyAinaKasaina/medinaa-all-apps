@@ -1,5 +1,7 @@
+import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Building2, Phone, Globe, Clock, AlertCircle, Loader2 } from 'lucide-react'
+import { prettyGeo } from '@/lib/geo'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -45,6 +47,9 @@ export function DashboardPage() {
     .sort((a, b) => b[1] - a[1])
 
   const maxCategoryCount = topCategories[0]?.[1] ?? 1
+
+  const topFaritra = (stats?.byFaritra ?? []).slice(0, 8)
+  const maxFaritraCount = topFaritra[0]?.count ?? 1
 
   return (
     <div className="space-y-6">
@@ -112,9 +117,42 @@ export function DashboardPage() {
               </div>
             )}
             {stats != null && stats.unverified > 0 && (
-              <p className="mt-4 text-xs text-amber-600">
-                {formatNumber(stats.unverified)} entités encore à classifier
-              </p>
+              <Link to="/places?status=unverified" className="mt-4 inline-block text-xs text-amber-600 hover:underline">
+                {formatNumber(stats.unverified)} entités encore à classifier →
+              </Link>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Répartition par région */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Répartition par région</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {statsLoading ? (
+              <div className="space-y-3">
+                {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
+              </div>
+            ) : topFaritra.length === 0 ? (
+              <p className="text-sm text-slate-400 text-center py-4">Aucune entité géolocalisée</p>
+            ) : (
+              <div className="space-y-3">
+                {topFaritra.map(f => (
+                  <div key={f.code} className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-medium text-slate-700">{prettyGeo(f.nom)}</span>
+                      <span className="text-slate-400">{formatNumber(f.count)}</span>
+                    </div>
+                    <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+                        style={{ width: `${(f.count / maxFaritraCount) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>
