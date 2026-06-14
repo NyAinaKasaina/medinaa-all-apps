@@ -55,6 +55,9 @@ export function MapPage() {
     const map = new maplibregl.Map({ container: containerRef.current, style: STYLE, center: CENTER, zoom: 11 })
     map.addControl(new maplibregl.NavigationControl(), 'top-right')
     mapRef.current = map
+    // Le conteneur peut ne pas avoir sa taille finale au montage (lazy-load, layout) -> resize.
+    const ro = new ResizeObserver(() => map.resize())
+    ro.observe(containerRef.current)
     map.on('load', () => {
       map.addSource('places', { type: 'geojson', data: { type: 'FeatureCollection', features: [] }, cluster: true, clusterRadius: 50, clusterMaxZoom: 13 })
       map.addLayer({ id: 'clusters', type: 'circle', source: 'places', filter: ['has', 'point_count'], paint: { 'circle-color': '#059669', 'circle-opacity': 0.85, 'circle-radius': ['step', ['get', 'point_count'], 14, 10, 18, 50, 24] } })
@@ -74,9 +77,10 @@ export function MapPage() {
       })
       map.on('mouseenter', 'pts', () => { map.getCanvas().style.cursor = 'pointer' })
       map.on('mouseleave', 'pts', () => { map.getCanvas().style.cursor = '' })
+      map.resize()
       setReady(true)
     })
-    return () => { map.remove(); mapRef.current = null }
+    return () => { ro.disconnect(); map.remove(); mapRef.current = null }
   }, [])
 
   // ---- données points ----
