@@ -6,6 +6,22 @@ Format : `## YYYY-MM-DD — Titre` · **Contexte** / **Décision** / **Conséque
 
 ---
 
+## 2026-06-13 — Réorg phase 2 : géographie alignée sur data-personne (codes officiels INSTAT)
+
+**Contexte.** Mickael a pointé le projet `data-personne` comme référence pour la structure géo. Celui-ci utilise la **codification officielle INSTAT** : codes hiérarchiques auto-imbriqués (faritra CHAR(2) < distrika CHAR(4) < kaominina CHAR(6) < fokontany CHAR(8)) dans une table `fokontany` dénormalisée (codes + noms aux 4 niveaux). Sa base `datapersonne` (localhost) contient une référence **complète** : 19 336 fokontany, 1704 communes, 119 districts, 23 régions.
+
+**Décisions (validées).** (1) Remplacer mes 4 tables normalisées à IDs entiers par la table `fokontany` dénormalisée (structure data-personne) + colonnes `code_faritra/distrika/kaominina/fokontany` sur `medical_entities`. (2) Rattachement best-effort : région/district fiable, commune/fokontany au mieux.
+
+**Actions réalisées.**
+- **DB** : script `005_geo_align_datapersonne.sql` (drop ancien géo, crée `fokontany` dénormalisée + colonnes codes). Copie des 19 336 fokontany officiels depuis `datapersonne` (`\copy`).
+- **Géocodage** : `backend/scripts/geo-enrich.cjs` (point-in-polygon Node, sans PostGIS) contre les limites geoBoundaries (ADM1-4, gitignored dans `backend/data/geo/`), match noms→codes officiels. Couverture : **faritra 94%, distrika 91%, kaominina 63%, fokontany 52%** (2177 entités). Ajustements : alias « Matsiatra Ambony »→Haute Matsiatra, arrondissements d'Antananarivo→ANTANANARIVO_I..VI, région fusionnée Vatovavy-Fitovinany résolue via district, repli par préfixe commun pour les variantes (Atsimo/Sud...).
+- **Backend** : entité `Fokontany` dénormalisée (remplace Region/District/Commune/Fokontany), `GeoModule` → `GET /api/geo/{faritra,distrika,kaominina}` (code+nom). `places` filtre par `faritra/distrika/kaominina` (codes). Build + smoke test OK (23 régions, filtre faritra=11 → 535 entités Analamanga).
+- **Frontend + mobile** : interfaces `code_*` + `GeoUnit{code,nom}`, endpoints geo, sélecteurs faritra/distrika par code (frontend). Build/tsc OK.
+
+**Leçon.** Deux référentiels à marier : codes officiels (data-personne, sans géométrie) + polygones (geoBoundaries, sans codes), pont par noms. Fiable aux niveaux grossiers, dégradé au fokontany (17 465 polygones ≠ 19 336 fokontany, noms divergents). geoBoundaries = 22 régions (pré-réforme) vs 23 officielles → gérer les régions scindées via le district. **Réutiliser la structure d'un projet jumeau (codes INSTAT) > réinventer un schéma géo.**
+
+---
+
 ## 2026-06-13 — Réorg schéma phase 1 : taxonomie médicale + hiérarchie géographique
 
 **Contexte.** Mise en œuvre du plan de réorg (taxonomie 6 catégories / 25 types adaptée au système de santé MDG, hiérarchie géo Région > District > Commune > Fokontany), validée via 3 décisions : tables de référence, géo structure + seed Régions/Districts (géocodage en phase 2), mapping auto des types évidents + statut `unverified` pour les ambigus.
