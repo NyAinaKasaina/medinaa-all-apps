@@ -79,6 +79,32 @@ export class PlacesService {
     return { items, total, page, limit, pages: Math.ceil(total / limit) };
   }
 
+  // FeatureCollection GeoJSON pour la carte (tous les points, ou filtrés par catégorie).
+  async geojson(category?: string) {
+    const qb = this.repo
+      .createQueryBuilder('e')
+      .select(['e.id', 'e.name', 'e.lat', 'e.lng', 'e.categorySlug', 'e.typeSlug', 'e.phone', 'e.openingHours', 'e.classificationStatus'])
+      .where('e.lat IS NOT NULL AND e.lng IS NOT NULL');
+    if (category) qb.andWhere('e.category_slug = :category', { category });
+    const rows = await qb.getMany();
+    return {
+      type: 'FeatureCollection',
+      features: rows.map((e) => ({
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: [e.lng, e.lat] },
+        properties: {
+          id: e.id,
+          name: e.name,
+          categorySlug: e.categorySlug,
+          typeSlug: e.typeSlug,
+          phone: e.phone,
+          openingHours: e.openingHours,
+          classificationStatus: e.classificationStatus,
+        },
+      })),
+    };
+  }
+
   async findOne(id: string) {
     const entity = await this.repo.findOneBy({ id });
     if (!entity) throw new NotFoundException(`Entité ${id} introuvable`);
