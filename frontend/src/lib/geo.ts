@@ -2,6 +2,14 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { api } from './api'
 
+// Distance à vol d'oiseau en km.
+export function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const R = 6371, r = Math.PI / 180
+  const dLat = (bLat - aLat) * r, dLng = (bLng - aLng) * r
+  const x = Math.sin(dLat / 2) ** 2 + Math.cos(aLat * r) * Math.cos(bLat * r) * Math.sin(dLng / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x))
+}
+
 // Présentation des noms officiels (MAJUSCULES, underscores) en libellé lisible.
 export function prettyGeo(nom?: string | null): string {
   if (!nom) return ''

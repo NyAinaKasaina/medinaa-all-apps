@@ -1,9 +1,10 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, MapPin, Gauge, Settings2, Download, Cross } from 'lucide-react'
+import { LayoutDashboard, Map, MapPin, Gauge, Settings2, Download, Cross } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const NAV = [
   { to: '/', icon: LayoutDashboard, label: 'Tableau de bord', end: true },
+  { to: '/carte', icon: Map, label: 'Carte' },
   { to: '/places', icon: MapPin, label: 'Entités médicales' },
   { to: '/quality', icon: Gauge, label: 'Qualité des données' },
   { to: '/scraper', icon: Settings2, label: 'Scraper' },

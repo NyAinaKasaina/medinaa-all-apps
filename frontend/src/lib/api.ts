@@ -73,6 +73,24 @@ export interface GeoUnit {
   nom: string
 }
 
+export interface PlaceFeature {
+  type: 'Feature'
+  geometry: { type: 'Point'; coordinates: [number, number] }
+  properties: {
+    id: string
+    name?: string | null
+    categorySlug?: string | null
+    typeSlug?: string | null
+    phone?: string | null
+    openingHours?: string | null
+    classificationStatus?: string | null
+  }
+}
+export interface PlacesGeoJSON {
+  type: 'FeatureCollection'
+  features: PlaceFeature[]
+}
+
 export interface PlacesResponse {
   items: MedicalEntity[]
   total: number
@@ -145,6 +163,7 @@ export const api = {
       return request<PlacesResponse>(`${BASE}/places?${q}`)
     },
     stats: () => request<PlacesStats>(`${BASE}/places/stats`),
+    geojson: (category?: string) => request<PlacesGeoJSON>(`${BASE}/places/geojson${category ? `?category=${category}` : ''}`),
     get: (id: string) => request<MedicalEntity>(`${BASE}/places/${id}`),
   },
   taxonomy: {
