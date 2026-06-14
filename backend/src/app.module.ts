@@ -11,6 +11,14 @@ import { MedicalEntity } from './modules/places/entities/medical-entity.entity';
 import { ScrapeJob } from './modules/scraper/entities/scrape-job.entity';
 import { ScrapeError } from './modules/scraper/entities/scrape-error.entity';
 import { User } from './modules/users/user.entity';
+import { MedicalCategory } from './modules/taxonomy/entities/medical-category.entity';
+import { MedicalType } from './modules/taxonomy/entities/medical-type.entity';
+import { Region } from './modules/geo/entities/region.entity';
+import { District } from './modules/geo/entities/district.entity';
+import { Commune } from './modules/geo/entities/commune.entity';
+import { Fokontany } from './modules/geo/entities/fokontany.entity';
+import { TaxonomyModule } from './modules/taxonomy/taxonomy.module';
+import { GeoModule } from './modules/geo/geo.module';
 
 @Module({
   imports: [
@@ -25,11 +33,16 @@ import { User } from './modules/users/user.entity';
         username: config.getOrThrow('DB_USER'),
         password: config.getOrThrow('DB_PASSWORD'),
         database: config.getOrThrow('DB_NAME'),
-        entities: [MedicalEntity, ScrapeJob, ScrapeError, User],
+        entities: [
+          MedicalEntity, ScrapeJob, ScrapeError, User,
+          MedicalCategory, MedicalType,
+          Region, District, Commune, Fokontany,
+        ],
         migrations: ['dist/migrations/*.js'],
-        // synchronize auto-crée les tables en développement
-        // Passer à false et utiliser les migrations en production
-        synchronize: config.get('NODE_ENV') !== 'production',
+        // Réorg du schéma en cours : le schéma est géré par les scripts SQL idempotents
+        // de backend/src/migrations/ (001-004). synchronize désactivé pour ne pas entrer
+        // en conflit avec les contraintes/index posés en SQL.
+        synchronize: false,
         logging: config.get('NODE_ENV') === 'development',
       }),
     }),
@@ -41,6 +54,8 @@ import { User } from './modules/users/user.entity';
     ExportModule,
     AuthModule,
     UsersModule,
+    TaxonomyModule,
+    GeoModule,
   ],
 })
 export class AppModule {}

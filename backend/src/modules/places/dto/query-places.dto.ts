@@ -8,12 +8,34 @@ export class QueryPlacesDto {
   @IsString()
   q?: string;
 
-  @ApiPropertyOptional({ description: 'Type: hospital, pharmacy, clinic, doctors, dentist, health_post…' })
+  @ApiPropertyOptional({ description: 'Catégorie (slug) : urgences_secours, soins_proximite…' })
+  @IsOptional()
+  @IsString()
+  category?: string;
+
+  @ApiPropertyOptional({ description: 'Type (slug) : pharmacie_officine, hopital_chu… (repli OSM legacy accepté)' })
   @IsOptional()
   @IsString()
   type?: string;
 
-  @ApiPropertyOptional({ description: 'Ville (addr_city)' })
+  @ApiPropertyOptional({ description: 'Statut de classification : osm_auto, verified, unverified' })
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @ApiPropertyOptional({ description: 'ID de région' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  regionId?: number;
+
+  @ApiPropertyOptional({ description: 'ID de district' })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  districtId?: number;
+
+  @ApiPropertyOptional({ description: 'Ville (addr_city, legacy)' })
   @IsOptional()
   @IsString()
   city?: string;

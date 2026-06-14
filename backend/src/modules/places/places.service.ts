@@ -1,7 +1,8 @@
-import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MedicalEntity } from './entities/medical-entity.entity';
+import { MedicalType } from '../taxonomy/entities/medical-type.entity';
 import { QueryPlacesDto } from './dto/query-places.dto';
 import { UpdatePlaceDto } from './dto/update-place.dto';
 
@@ -10,18 +11,33 @@ export class PlacesService {
   constructor(
     @InjectRepository(MedicalEntity)
     private readonly repo: Repository<MedicalEntity>,
+    @InjectRepository(MedicalType)
+    private readonly types: Repository<MedicalType>,
   ) {}
 
   async findAll(query: QueryPlacesDto) {
-    const { page = 1, limit = 50, q, type, city } = query;
+    const { page = 1, limit = 50, q, type, category, regionId, districtId, status, city } = query;
 
     const qb = this.repo.createQueryBuilder('e');
 
     if (q) {
       qb.andWhere('e.name ILIKE :q', { q: `%${q}%` });
     }
+    if (category) {
+      qb.andWhere('e.category_slug = :category', { category });
+    }
     if (type) {
-      qb.andWhere('(e.amenity = :type OR e.healthcare = :type)', { type });
+      // Nouveau type_slug, avec repli sur les tags OSM legacy pendant la transition.
+      qb.andWhere('(e.type_slug = :type OR e.amenity = :type OR e.healthcare = :type)', { type });
+    }
+    if (regionId) {
+      qb.andWhere('e.region_id = :regionId', { regionId });
+    }
+    if (districtId) {
+      qb.andWhere('e.district_id = :districtId', { districtId });
+    }
+    if (status) {
+      qb.andWhere('e.classification_status = :status', { status });
     }
     if (city) {
       qb.andWhere('e.addr_city ILIKE :city', { city: `%${city}%` });
@@ -60,7 +76,25 @@ export class PlacesService {
     const entity = await this.repo.findOneBy({ id });
     if (!entity) throw new NotFoundException(`Entité ${id} introuvable`);
     if (entity.ownerId !== userId) throw new ForbiddenException('Not the owner');
-    Object.assign(entity, data);
+
+    const { typeSlug, ...rest } = data;
+    Object.assign(entity, rest);
+
+    // Curation : quand le propriétaire fixe le type, on dérive la catégorie et on valide.
+    if (typeSlug !== undefined) {
+      if (typeSlug === null) {
+        entity.typeSlug = null;
+        entity.categorySlug = null;
+        entity.classificationStatus = 'unverified';
+      } else {
+        const t = await this.types.findOneBy({ slug: typeSlug });
+        if (!t) throw new BadRequestException(`Type inconnu : ${typeSlug}`);
+        entity.typeSlug = t.slug;
+        entity.categorySlug = t.categorySlug;
+        entity.classificationStatus = 'verified';
+      }
+    }
+
     return this.repo.save(entity);
   }
 
@@ -73,19 +107,24 @@ export class PlacesService {
     const withPhone   = await this.repo.createQueryBuilder('e').where('e.phone IS NOT NULL').getCount();
     const withWebsite = await this.repo.createQueryBuilder('e').where('e.website IS NOT NULL').getCount();
     const withHours   = await this.repo.createQueryBuilder('e').where('e.opening_hours IS NOT NULL').getCount();
+    const unverified  = await this.repo.createQueryBuilder('e').where("e.classification_status = 'unverified'").getCount();
 
-    const rows: Array<{ type: string; count: string }> = await this.repo.query(`
-      SELECT COALESCE(amenity, healthcare, 'autre') AS type, COUNT(*) AS count
-      FROM medical_entities
-      WHERE amenity IS NOT NULL OR healthcare IS NOT NULL
-      GROUP BY COALESCE(amenity, healthcare, 'autre')
-      ORDER BY count DESC
-      LIMIT 20
+    const byCategoryRows: Array<{ slug: string; count: string }> = await this.repo.query(`
+      SELECT category_slug AS slug, COUNT(*) AS count
+      FROM medical_entities WHERE category_slug IS NOT NULL
+      GROUP BY category_slug ORDER BY count DESC
+    `);
+    const byTypeRows: Array<{ slug: string; count: string }> = await this.repo.query(`
+      SELECT type_slug AS slug, COUNT(*) AS count
+      FROM medical_entities WHERE type_slug IS NOT NULL
+      GROUP BY type_slug ORDER BY count DESC
     `);
 
+    const byCategory: Record<string, number> = {};
+    for (const row of byCategoryRows) byCategory[row.slug] = Number(row.count);
     const byType: Record<string, number> = {};
-    for (const row of rows) byType[row.type] = Number(row.count);
+    for (const row of byTypeRows) byType[row.slug] = Number(row.count);
 
-    return { total, withPhone, withWebsite, withHours, byType };
+    return { total, withPhone, withWebsite, withHours, unverified, byCategory, byType };
   }
 }
