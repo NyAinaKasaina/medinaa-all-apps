@@ -10,6 +10,7 @@ Scripts idempotents, à rejouer dans l'ordre via `psql -v ON_ERROR_STOP=1 -f <fi
 2. `002_seed_taxonomy.sql` — 6 catégories + 25 types (UPSERT).
 3. `003_seed_regions_districts.sql` — 24 régions + 114 districts (UPSERT ; liste districts à compléter vs INSTAT).
 4. `004_map_osm_to_types.sql` — reclassement OSM→type des types non ambigus (ne touche que les lignes `unverified`).
+5. `005_geo_align_datapersonne.sql` — **réalignement géo (phase 2)** : remplace les 4 tables normalisées par la table `fokontany` dénormalisée (codes officiels INSTAT) + colonnes `code_*` sur medical_entities. Suivi de la copie des 19 336 fokontany et du géocodage : voir `backend/scripts/README-geo.md`.
 
 Pour réappliquer à neuf : restaurer un backup puis rejouer 001→004.
 
