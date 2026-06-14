@@ -6,6 +6,20 @@ Format : `## YYYY-MM-DD — Titre` · **Contexte** / **Décision** / **Conséque
 
 ---
 
+## 2026-06-14 — Carte interactive (type Google Maps) + plus proche par la route
+
+**Contexte.** Fonctionnalité phare : se géolocaliser, chercher une catégorie ouverte dans un rayon, et obtenir l'itinéraire vers la plus proche. App web (le mobile/Kasaina a déjà sa MapScreen). Le frontend web n'avait aucune carte.
+
+**Stack (gratuit, sans clé).** MapLibre GL JS + tuiles **OpenFreeMap** `liberty` (comme le mobile). Géoloc navigateur. **Plus proche = par la ROUTE** (exigence Mickael, pas vol d'oiseau) : pré-filtre rayon en Haversine (gratuit) puis classement des ~20 meilleurs candidats par **distance routière via OSRM Table** (matrice user→candidats, gratuit). Itinéraire tracé via **OSRM route** + bouton **« Ouvrir dans Google Maps »** (deep link) pour la navigation. OSRM public = dev (à self-host pour la prod).
+
+**Réalisé.** Backend : `GET /api/places/geojson?category=` (FeatureCollection, 2041 points). Frontend : `lib/openingHours.ts` (`isOpenNow`, parse Google FR + OSM), `haversineKm`, `pages/MapPage.tsx` (carte clusterisée colorée par catégorie, « Ma position » + cercle de rayon, filtres catégorie/rayon/ouvert, liste triée par distance routière avec « le plus proche (route) » + temps, carte détail + itinéraire). Onglet « Carte » (sidebar + bottom nav), route lazy-loadée (MapLibre ~900 Ko hors bundle initial).
+
+**Vérifié.** Builds OK. OSRM testé sur Antananarivo (Table + Route = code Ok, distances routières correctes). geojson pharmacies = 454. **Rendu visuel à valider** par Mickael (`npm run dev`, géoloc nécessite localhost/HTTPS).
+
+**Limites.** « Ouvert maintenant » : seulement les ~13% avec horaires. Classement routier limité aux 20 meilleurs candidats (vol d'oiseau au-delà). OSRM public non-prod.
+
+---
+
 ## 2026-06-14 — Data cleaning : classification étendue + bilan enrichissement
 
 **Classification étendue (gratuit, migration `007`).** Reclassement des `unverified` depuis les tags OSM, plus large que le 1er pass (j'avais été trop prudent) : `doctors`/`doctor`→cabinet_medical_general, `health_post`(+nurse)→CSB1 / (+doctor)→CSB2, `nurse`→soins_infirmiers, `hospital`→**CHD (défaut documenté, CHU à reclasser)**. Résultat : **Classifiées 30% → 89%** (osm_auto 656→1942, à classifier 1521→**235**). Restent indéterminés : `clinic` (pas d'équivalent propre dans la taxo), tags génériques (`yes`, `health_facility`, `alternative`…). Statut `osm_auto` = auto, à vérifier (dashboard Qualité distingue Vérifié/Auto).
