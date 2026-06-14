@@ -28,10 +28,19 @@ function circle(lng: number, lat: number, km: number, n = 64) {
   return { type: 'Feature' as const, geometry: { type: 'Polygon' as const, coordinates: [coords] }, properties: {} }
 }
 
+// MapLibre est 100% WebGL : on détecte sa disponibilité pour dégrader proprement.
+function webglAvailable(): boolean {
+  try {
+    const c = document.createElement('canvas')
+    return !!(window.WebGLRenderingContext && (c.getContext('webgl') || c.getContext('experimental-webgl')))
+  } catch { return false }
+}
+
 export function MapPage() {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const [ready, setReady] = useState(false)
+  const [noWebgl, setNoWebgl] = useState(() => !webglAvailable())
 
   const [category, setCategory] = useState('produits_sante')
   const [radiusKm, setRadiusKm] = useState(5)
@@ -51,8 +60,14 @@ export function MapPage() {
 
   // ---- init carte ----
   useEffect(() => {
-    if (!containerRef.current || mapRef.current) return
-    const map = new maplibregl.Map({ container: containerRef.current, style: STYLE, center: CENTER, zoom: 11 })
+    if (!containerRef.current || mapRef.current || noWebgl) return
+    let map: maplibregl.Map
+    try {
+      map = new maplibregl.Map({ container: containerRef.current, style: STYLE, center: CENTER, zoom: 11 })
+    } catch {
+      setNoWebgl(true)
+      return
+    }
     map.addControl(new maplibregl.NavigationControl(), 'top-right')
     mapRef.current = map
     // Le conteneur peut ne pas avoir sa taille finale au montage (lazy-load, layout) -> resize.
@@ -176,6 +191,71 @@ export function MapPage() {
 
   const gmaps = (f: PlaceFeature) => `https://www.google.com/maps/dir/?api=1&destination=${f.geometry.coordinates[1]},${f.geometry.coordinates[0]}&travelmode=driving`
   const typeLabel = (slug?: string | null) => taxonomy?.flatMap((c) => c.types).find((t) => t.slug === slug)?.labelFr ?? slug ?? ''
+
+  // ---- Repli sans WebGL : carte visuelle indisponible, mais "plus proche + itinéraire" fonctionnel ----
+  if (noWebgl) {
+    return (
+      <div className="space-y-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Carte</h1>
+          <p className="text-slate-500 text-sm mt-1">Trouver l'établissement le plus proche et s'y rendre</p>
+        </div>
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+          La carte interactive nécessite <strong>WebGL</strong>, actuellement désactivé dans ce navigateur. Active l'accélération matérielle (voir l'aide en bas) pour l'afficher. En attendant, la recherche du plus proche reste utilisable ci-dessous.
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm min-w-[180px]" value={category} onChange={(e) => setCategory(e.target.value)}>
+            <option value="">Toutes catégories</option>
+            {(taxonomy ?? []).map((c) => <option key={c.slug} value={c.slug}>{c.labelFr}</option>)}
+          </select>
+          <button onClick={locate} className="h-10 rounded-lg bg-emerald-600 text-white text-sm font-medium px-4 flex items-center gap-2 hover:bg-emerald-700">
+            <Crosshair className="w-4 h-4" /> Ma position
+          </button>
+          {userLoc && (
+            <label className="flex items-center gap-2 text-sm text-slate-600">Rayon
+              <input type="range" min={1} max={20} value={radiusKm} onChange={(e) => setRadiusKm(Number(e.target.value))} className="accent-emerald-600" />
+              <span className="font-semibold text-slate-700 w-12">{radiusKm} km</span>
+            </label>
+          )}
+          <label className="flex items-center gap-2 text-sm text-slate-700">
+            <input type="checkbox" checked={openOnly} onChange={(e) => setOpenOnly(e.target.checked)} className="accent-emerald-600" /> Ouvert maintenant
+          </label>
+        </div>
+        {geoError && <p className="text-xs text-red-600">{geoError}</p>}
+        {!userLoc ? (
+          <p className="text-sm text-slate-400">Clique « Ma position » pour classer les établissements du plus proche au plus loin (par la route).</p>
+        ) : (
+          <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+            {ranked.slice(0, 30).map((r, i) => (
+              <div key={r.f.properties.id} className={cn('rounded-xl border p-3', i === 0 ? 'border-emerald-300 bg-emerald-50/60' : 'border-slate-200 bg-white')}>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-medium text-slate-900 truncate">{r.f.properties.name ?? '(Sans nom)'}</span>
+                  <span className="text-xs text-emerald-700 font-semibold whitespace-nowrap">{r.road ? `${r.road.km.toFixed(1)} km` : `~${r.dist!.toFixed(1)} km`}</span>
+                </div>
+                <div className="flex items-center gap-2 mt-0.5 text-[11px]">
+                  {i === 0 && <span className="font-bold text-emerald-700">LE PLUS PROCHE{r.road ? ' (route)' : ''}</span>}
+                  {r.road && <span className="text-slate-400">{Math.round(r.road.min)} min</span>}
+                  {r.open === true && <span className="text-emerald-600">Ouvert</span>}
+                  {r.open === false && <span className="text-red-500">Fermé</span>}
+                  <span className="text-slate-400 truncate">{typeLabel(r.f.properties.typeSlug)}</span>
+                </div>
+                <a href={gmaps(r.f)} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:underline">
+                  <Navigation className="w-3.5 h-3.5" /> Itinéraire (Google Maps)
+                </a>
+              </div>
+            ))}
+          </div>
+        )}
+        <details className="text-xs text-slate-500 mt-2">
+          <summary className="cursor-pointer font-medium">Comment réactiver WebGL ?</summary>
+          <div className="mt-2 space-y-1.5">
+            <p><strong>Chrome / Edge</strong> : Paramètres → Système → « Utiliser l'accélération graphique si disponible » → activer, puis redémarrer. Vérifie sur <code>chrome://gpu</code> (WebGL doit être « Hardware accelerated »). Si bloqué : <code>chrome://flags/#ignore-gpu-blocklist</code> → Enabled → relancer.</p>
+            <p><strong>Firefox</strong> : <code>about:config</code> → <code>webgl.disabled</code> = false (et <code>webgl.force-enabled</code> = true si besoin).</p>
+          </div>
+        </details>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-3">

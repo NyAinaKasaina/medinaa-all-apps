@@ -35,6 +35,8 @@ Format : `## YYYY-MM-DD — Titre` · **Contexte** / **Décision** / **Conséque
 
 **Limites.** « Ouvert maintenant » : seulement les ~13% avec horaires. Classement routier limité aux 20 meilleurs candidats (vol d'oiseau au-delà). OSRM public non-prod.
 
+**WebGL requis (bug résolu 2026-06-14).** MapLibre GL est 100% WebGL ; sur la machine de Mickael WebGL était désactivé (« WebGL is currently disabled », fréquent sous Linux quand l'accélération matérielle est off / GPU blocklisté). `MapPage` détecte désormais l'absence de WebGL (`webglAvailable()` + try/catch) et bascule sur un **repli fonctionnel sans carte** : filtres + géoloc + liste classée par route (OSRM Table) + lien itinéraire Google Maps, plus une aide pour réactiver WebGL (chrome://gpu, hardware accel). Le vrai correctif visuel = réactiver WebGL côté navigateur.
+
 ---
 
 ## 2026-06-14 — Data cleaning : classification étendue + bilan enrichissement
