@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MedicalEntity } from './entities/medical-entity.entity';
 import { MedicalType } from '../taxonomy/entities/medical-type.entity';
+import { Fokontany } from '../geo/entities/fokontany.entity';
 import { QueryPlacesDto } from './dto/query-places.dto';
 import { UpdatePlaceDto } from './dto/update-place.dto';
 
@@ -13,7 +14,25 @@ export class PlacesService {
     private readonly repo: Repository<MedicalEntity>,
     @InjectRepository(MedicalType)
     private readonly types: Repository<MedicalType>,
+    @InjectRepository(Fokontany)
+    private readonly fokontany: Repository<Fokontany>,
   ) {}
+
+  // Résout les noms administratifs (faritra/distrika/kaominina/fokontany) au niveau le plus profond connu.
+  private async resolveGeo(e: MedicalEntity) {
+    let row: Fokontany | null = null;
+    if (e.codeFokontany) row = await this.fokontany.findOneBy({ codeFokontany: e.codeFokontany });
+    else if (e.codeKaominina) row = await this.fokontany.findOneBy({ codeKaominina: e.codeKaominina });
+    else if (e.codeDistrika) row = await this.fokontany.findOneBy({ codeDistrika: e.codeDistrika });
+    else if (e.codeFaritra) row = await this.fokontany.findOneBy({ codeFaritra: e.codeFaritra });
+    if (!row) return null;
+    const geo: Record<string, { code: string; nom: string }> = {};
+    if (e.codeFaritra) geo.faritra = { code: e.codeFaritra, nom: row.nomFaritra };
+    if (e.codeDistrika) geo.distrika = { code: e.codeDistrika, nom: row.nomDistrika };
+    if (e.codeKaominina) geo.kaominina = { code: e.codeKaominina, nom: row.nomKaominina };
+    if (e.codeFokontany) geo.fokontany = { code: e.codeFokontany, nom: row.nomFokontany };
+    return geo;
+  }
 
   async findAll(query: QueryPlacesDto) {
     const { page = 1, limit = 50, q, type, category, faritra, distrika, kaominina, status, city } = query;
@@ -55,10 +74,10 @@ export class PlacesService {
     return { items, total, page, limit, pages: Math.ceil(total / limit) };
   }
 
-  async findOne(id: string): Promise<MedicalEntity> {
+  async findOne(id: string) {
     const entity = await this.repo.findOneBy({ id });
     if (!entity) throw new NotFoundException(`Entité ${id} introuvable`);
-    return entity;
+    return { ...entity, geo: await this.resolveGeo(entity) };
   }
 
   async upsert(data: Partial<MedicalEntity>): Promise<MedicalEntity> {
@@ -128,6 +147,16 @@ export class PlacesService {
     const byType: Record<string, number> = {};
     for (const row of byTypeRows) byType[row.slug] = Number(row.count);
 
-    return { total, withPhone, withWebsite, withHours, unverified, byCategory, byType };
+    const byFaritraRows: Array<{ code: string; nom: string; count: string }> = await this.repo.query(`
+      SELECT m.code_faritra AS code, f.nom AS nom, COUNT(*) AS count
+      FROM medical_entities m
+      JOIN (SELECT DISTINCT code_faritra, nom_faritra AS nom FROM fokontany) f ON f.code_faritra = m.code_faritra
+      WHERE m.code_faritra IS NOT NULL
+      GROUP BY m.code_faritra, f.nom
+      ORDER BY count DESC
+    `);
+    const byFaritra = byFaritraRows.map((r) => ({ code: r.code, nom: r.nom, count: Number(r.count) }));
+
+    return { total, withPhone, withWebsite, withHours, unverified, byCategory, byType, byFaritra };
   }
 }
