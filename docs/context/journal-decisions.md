@@ -12,9 +12,11 @@ Format : `## YYYY-MM-DD — Titre` · **Contexte** / **Décision** / **Conséque
 
 **`--nameless` abandonné.** Pilote 1/25 (Google ne couvre pas les zones des 315 sans nom). Les noms manquants viendront du claim par les propriétaires.
 
-**Pollution hors-Madagascar détectée.** Le scrape OSM (bbox) a capté des entités de **Mayotte/Comores** (ex. « ...Chiconi », lat -12,8/lng 45,1) qui tombent dans la bbox mais hors pays (code_faritra NULL). À identifier précisément (vs grand Nord malgache légitime) et purger sur confirmation.
+**Purge hors-Madagascar (migration `008`).** Le scrape OSM (bbox) avait capté **136 entités de Mayotte/Comores** (noms comoriens/mahorais, toutes code_faritra NULL = hors territoire). Supprimées via boîtes géographiques explicites (backup pré-purge fait). Effet : **total 2177 → 2041, géolocalisation 94% → 100%** (les 136 étaient tout le « sans région »).
 
-**Pistes restantes pour la qualité.** Site web à 1% : récupérable via Google (champ `website`) pour les 728 entités déjà appariées (~12 $). Géo commune/fokontany au plafond du matching par nom (cf. README-geo).
+**Site web (Google, ~12 $).** `scripts/google-website.cjs` : Place Details (champ website) pour les entités appariées → **72 sites comblés** (31 → ~103 avant purge, 82 après).
+
+**Bilan qualité (denominateur 2041, vs début de session à 2177).** Classifiées 30%→**90%** · Géolocalisées 94%→**100%** · Téléphone 7%→**17%** · Horaires 5%→**13%** · Site web 1%→**4%** · Nom **86%**. Plafonds atteints : tél/horaires/site = couverture Google ; commune/fokontany = matching par nom ; noms manquants (295) → claim propriétaires.
 
 ---
 
