@@ -29,11 +29,11 @@ export interface MedicalEntity {
   typeSlug?: string | null
   categorySlug?: string | null
   classificationStatus?: 'osm_auto' | 'verified' | 'unverified'
-  // Géographie
-  regionId?: number | null
-  districtId?: number | null
-  communeId?: number | null
-  fokontanyId?: number | null
+  // Géographie — codes officiels INSTAT (faritra/distrika/kaominina/fokontany)
+  codeFaritra?: string | null
+  codeDistrika?: string | null
+  codeKaominina?: string | null
+  codeFokontany?: string | null
   scrapedAt?: string
   createdAt: string
   updatedAt: string
@@ -60,17 +60,10 @@ export interface MedicalCategory {
   types: MedicalType[]
 }
 
-export interface Region {
-  id: number
-  code?: string
-  name: string
-}
-
-export interface District {
-  id: number
-  regionId: number
-  code?: string
-  name: string
+// Niveau administratif (faritra/distrika/kaominina) : code officiel + nom
+export interface GeoUnit {
+  code: string
+  nom: string
 }
 
 export interface PlacesResponse {
@@ -125,13 +118,14 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   places: {
-    list: (params: { q?: string; category?: string; type?: string; regionId?: number; districtId?: number; status?: string; city?: string; page?: number; limit?: number } = {}) => {
+    list: (params: { q?: string; category?: string; type?: string; faritra?: string; distrika?: string; kaominina?: string; status?: string; city?: string; page?: number; limit?: number } = {}) => {
       const q = new URLSearchParams()
       if (params.q)          q.set('q',          params.q)
       if (params.category)   q.set('category',   params.category)
       if (params.type)       q.set('type',       params.type)
-      if (params.regionId)   q.set('regionId',   String(params.regionId))
-      if (params.districtId) q.set('districtId', String(params.districtId))
+      if (params.faritra)    q.set('faritra',    params.faritra)
+      if (params.distrika)   q.set('distrika',   params.distrika)
+      if (params.kaominina)  q.set('kaominina',  params.kaominina)
       if (params.status)     q.set('status',     params.status)
       if (params.city)       q.set('city',       params.city)
       if (params.page)       q.set('page',       String(params.page))
@@ -146,8 +140,9 @@ export const api = {
     types: () => request<MedicalType[]>(`${BASE}/taxonomy/types`),
   },
   geo: {
-    regions:   () => request<Region[]>(`${BASE}/regions`),
-    districts: (regionId: number) => request<District[]>(`${BASE}/regions/${regionId}/districts`),
+    faritra:   () => request<GeoUnit[]>(`${BASE}/geo/faritra`),
+    distrika:  (faritra: string) => request<GeoUnit[]>(`${BASE}/geo/distrika?faritra=${faritra}`),
+    kaominina: (distrika: string) => request<GeoUnit[]>(`${BASE}/geo/kaominina?distrika=${distrika}`),
   },
   scraper: {
     status: () => request<{ job: ScrapeJob | null }>(`${BASE}/scraper/status`).then(r => r.job),

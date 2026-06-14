@@ -15,8 +15,8 @@ export function PlacesPage() {
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [category, setCategory] = useState('')
-  const [regionId, setRegionId] = useState<number | undefined>()
-  const [districtId, setDistrictId] = useState<number | undefined>()
+  const [faritra, setFaritra] = useState<string | undefined>()
+  const [distrika, setDistrika] = useState<string | undefined>()
   const [page, setPage] = useState(1)
 
   useEffect(() => {
@@ -25,24 +25,24 @@ export function PlacesPage() {
   }, [search])
 
   const resetPage = useCallback(() => setPage(1), [])
-  useEffect(resetPage, [debouncedSearch, category, regionId, districtId, resetPage])
+  useEffect(resetPage, [debouncedSearch, category, faritra, distrika, resetPage])
 
   const { data: taxonomy } = useTaxonomy()
-  const { data: regions } = useQuery({ queryKey: ['regions'], queryFn: api.geo.regions, staleTime: Infinity })
-  const { data: districts } = useQuery({
-    queryKey: ['districts', regionId],
-    queryFn: () => api.geo.districts(regionId!),
-    enabled: !!regionId,
+  const { data: faritraList } = useQuery({ queryKey: ['faritra'], queryFn: api.geo.faritra, staleTime: Infinity })
+  const { data: distrikaList } = useQuery({
+    queryKey: ['distrika', faritra],
+    queryFn: () => api.geo.distrika(faritra!),
+    enabled: !!faritra,
     staleTime: Infinity,
   })
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['places', { q: debouncedSearch, category, regionId, districtId, page }],
+    queryKey: ['places', { q: debouncedSearch, category, faritra, distrika, page }],
     queryFn: () => api.places.list({
       q: debouncedSearch || undefined,
       category: category || undefined,
-      regionId,
-      districtId,
+      faritra,
+      distrika,
       page,
       limit: 20,
     }),
@@ -99,20 +99,20 @@ export function PlacesPage() {
       <div className="flex flex-wrap gap-2">
         <select
           className={SELECT}
-          value={regionId ?? ''}
-          onChange={e => { const v = e.target.value; setRegionId(v ? Number(v) : undefined); setDistrictId(undefined) }}
+          value={faritra ?? ''}
+          onChange={e => { const v = e.target.value; setFaritra(v || undefined); setDistrika(undefined) }}
         >
           <option value="">Toutes les régions</option>
-          {(regions ?? []).map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+          {(faritraList ?? []).map(r => <option key={r.code} value={r.code}>{r.nom}</option>)}
         </select>
         <select
-          className={cn(SELECT, !regionId && 'opacity-50')}
-          value={districtId ?? ''}
-          disabled={!regionId}
-          onChange={e => { const v = e.target.value; setDistrictId(v ? Number(v) : undefined) }}
+          className={cn(SELECT, !faritra && 'opacity-50')}
+          value={distrika ?? ''}
+          disabled={!faritra}
+          onChange={e => { const v = e.target.value; setDistrika(v || undefined) }}
         >
           <option value="">Tous les districts</option>
-          {(districts ?? []).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+          {(distrikaList ?? []).map(d => <option key={d.code} value={d.code}>{d.nom}</option>)}
         </select>
       </div>
 
@@ -145,7 +145,7 @@ export function PlacesPage() {
               </div>
               <p className="text-slate-500 font-medium">Aucun résultat trouvé</p>
               <p className="text-slate-400 text-sm">Essayez d'autres filtres</p>
-              <Button variant="outline" size="sm" onClick={() => { setSearch(''); setCategory(''); setRegionId(undefined); setDistrictId(undefined) }}>
+              <Button variant="outline" size="sm" onClick={() => { setSearch(''); setCategory(''); setFaritra(undefined); setDistrika(undefined) }}>
                 Réinitialiser les filtres
               </Button>
             </div>
