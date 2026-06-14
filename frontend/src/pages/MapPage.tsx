@@ -29,10 +29,14 @@ function circle(lng: number, lat: number, km: number, n = 64) {
 }
 
 // MapLibre est 100% WebGL : on détecte sa disponibilité pour dégrader proprement.
+// On LIBÈRE le contexte de test (sinon il compte dans la limite de contextes WebGL du navigateur).
 function webglAvailable(): boolean {
   try {
     const c = document.createElement('canvas')
-    return !!(window.WebGLRenderingContext && (c.getContext('webgl') || c.getContext('experimental-webgl')))
+    const gl = (c.getContext('webgl') || c.getContext('experimental-webgl')) as WebGLRenderingContext | null
+    if (!gl) return false
+    gl.getExtension('WEBGL_lose_context')?.loseContext()
+    return true
   } catch { return false }
 }
 
