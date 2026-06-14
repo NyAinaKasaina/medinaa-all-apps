@@ -26,6 +26,22 @@ function bestByPrefix(n, cands) {
   }
   return best && bestLen >= 6 && bestLen > second ? best.code : null;
 }
+// Inclusion de nom (un nom contient l'autre, >=5 car.) : retenu seulement si UNIQUE dans le lot.
+function bestByContainment(n, cands) {
+  const hits = cands.filter((c) => {
+    const a = c.norm, b = n, m = Math.min(a.length, b.length);
+    return m >= 5 && (a.includes(b) || b.includes(a));
+  });
+  return hits.length === 1 ? hits[0].code : null;
+}
+// Résolution générique : exact -> préfixe -> inclusion (chacun restreint au lot de candidats).
+function resolveCode(name, cands) {
+  if (!name || !cands.length) return null;
+  const n = norm(name);
+  const ex = cands.find((c) => c.norm === n);
+  if (ex) return ex.code;
+  return bestByPrefix(n, cands) || bestByContainment(n, cands);
+}
 
 // ---- Géométrie (point-in-polygon, Polygon + MultiPolygon + trous) ----
 function bboxOf(geom) {
@@ -76,8 +92,8 @@ async function main() {
   const fk = (await db.query('SELECT code_faritra,code_distrika,code_kaominina,code_fokontany,nom_faritra,nom_distrika,nom_kaominina,nom_fokontany FROM fokontany')).rows;
   const faritraByName = new Map();        // norm(nom) -> code_faritra
   const districtsByFaritra = new Map();   // code_faritra -> [{code, norm}]
-  const kaomininaByDistrict = new Map();  // code_distrika -> [{code, norm}]
-  const fokontanyByName = new Map();      // code_kaominina|norm -> code_fokontany
+  const kaomininaByDistrict = new Map();   // code_distrika -> [{code, norm}]
+  const fokontanyByKaominina = new Map();  // code_kaominina -> [{code, norm}]
   const seenD = new Set(), seenK = new Set();
   for (const r of fk) {
     faritraByName.set(norm(r.nom_faritra), r.code_faritra);
@@ -91,7 +107,8 @@ async function main() {
       if (!kaomininaByDistrict.has(r.code_distrika)) kaomininaByDistrict.set(r.code_distrika, []);
       kaomininaByDistrict.get(r.code_distrika).push({ code: r.code_kaominina, norm: norm(r.nom_kaominina) });
     }
-    fokontanyByName.set(r.code_kaominina + '|' + norm(r.nom_fokontany), r.code_fokontany);
+    if (!fokontanyByKaominina.has(r.code_kaominina)) fokontanyByKaominina.set(r.code_kaominina, []);
+    fokontanyByKaominina.get(r.code_kaominina).push({ code: r.code_fokontany, norm: norm(r.nom_fokontany) });
   }
   // Alias région : geoBoundaries nomme Haute Matsiatra "Matsiatra Ambony".
   const hm = faritraByName.get('HAUTEMATSIATRA');
@@ -110,20 +127,19 @@ async function main() {
   }
   function districtOf(name, fSet) {
     if (!name) return null;
-    const n = norm(name);
-    if (ARR[n]) return ARR[n];
+    if (ARR[norm(name)]) return ARR[norm(name)];
     let cands = [];
     if (fSet.size) for (const cf of fSet) cands.push(...(districtsByFaritra.get(cf) || []));
     else for (const arr of districtsByFaritra.values()) cands.push(...arr);
-    const ex = cands.find((d) => d.norm === n);
-    return ex ? ex.code : bestByPrefix(n, cands);
+    return resolveCode(name, cands);
   }
   function kaomininaOf(name, cd) {
-    if (!name || !cd) return null;
-    const n = norm(name);
-    const cands = kaomininaByDistrict.get(cd) || [];
-    const ex = cands.find((k) => k.norm === n);
-    return ex ? ex.code : bestByPrefix(n, cands);
+    if (!cd) return null;
+    return resolveCode(name, kaomininaByDistrict.get(cd) || []);
+  }
+  function fokontanyOf(name, ck) {
+    if (!ck) return null;
+    return resolveCode(name, fokontanyByKaominina.get(ck) || []);
   }
 
   // ---- Polygones ----
@@ -149,7 +165,7 @@ async function main() {
 
     if (cd) { ck = kaomininaOf((locate(x, y, ADM3) || {}).name, cd); if (ck) { cd = ck.slice(0, 4); cf = ck.slice(0, 2); } }
 
-    if (ck) { const f = locate(x, y, ADM4); if (f) { const c = fokontanyByName.get(ck + '|' + norm(f.name)); if (c) { cfok = c; ck = c.slice(0, 6); cd = c.slice(0, 4); cf = c.slice(0, 2); } } }
+    if (ck) { const c = fokontanyOf((locate(x, y, ADM4) || {}).name, ck); if (c) { cfok = c; ck = c.slice(0, 6); cd = c.slice(0, 4); cf = c.slice(0, 2); } }
 
     if (cf) cov.faritra++; if (cd) cov.distrika++; if (ck) cov.kaominina++; if (cfok) cov.fokontany++;
     updates.push({ id: e.id, cf, cd, ck, cfok });
