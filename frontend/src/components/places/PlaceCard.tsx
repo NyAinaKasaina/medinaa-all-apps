@@ -1,12 +1,11 @@
 import { useNavigate } from 'react-router-dom'
 import { MapPin, Phone, ChevronRight } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
-import { TypeBadge, primaryType } from './TypeBadge'
+import { TypeBadge } from './TypeBadge'
 import type { MedicalEntity } from '@/lib/api'
 
 export function PlaceCard({ place }: { place: MedicalEntity }) {
   const navigate = useNavigate()
-  const type = primaryType(place)
   const displayName = place.name ?? place.nameMg ?? '(Sans nom)'
   const address = [place.addrStreet, place.addrCity].filter(Boolean).join(', ') || place.addrDistrict
 
@@ -19,7 +18,7 @@ export function PlaceCard({ place }: { place: MedicalEntity }) {
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex flex-wrap items-center gap-1.5 mb-1.5">
-              {type && <TypeBadge type={type} />}
+              <TypeBadge entity={place} />
               {place.emergency && (
                 <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700">
                   Urgences

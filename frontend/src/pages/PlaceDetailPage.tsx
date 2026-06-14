@@ -4,7 +4,7 @@ import { ArrowLeft, MapPin, Phone, Globe, Clock, ExternalLink, AlertCircle, Bed,
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { TypeBadge, primaryType } from '@/components/places/TypeBadge'
+import { TypeBadge } from '@/components/places/TypeBadge'
 import { api } from '@/lib/api'
 
 export function PlaceDetailPage() {
@@ -17,7 +17,6 @@ export function PlaceDetailPage() {
     enabled: !!id,
   })
 
-  const type = place ? primaryType(place) : undefined
   const displayName = place?.name ?? place?.nameMg ?? '(Sans nom)'
   const fullAddress = [
     place?.addrHousenumber,
@@ -55,7 +54,7 @@ export function PlaceDetailPage() {
         <>
           <div className="space-y-2">
             <div className="flex flex-wrap gap-2 items-center">
-              {type && <TypeBadge type={type} />}
+              <TypeBadge entity={place} />
               {place.emergency && (
                 <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-red-100 text-red-700">Urgences 24h</span>
               )}

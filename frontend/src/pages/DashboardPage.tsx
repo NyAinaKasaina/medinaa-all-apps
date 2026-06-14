@@ -7,13 +7,13 @@ import { Badge } from '@/components/ui/badge'
 import { api } from '@/lib/api'
 import { formatNumber, pct } from '@/lib/utils'
 
-const TYPE_LABELS: Record<string, string> = {
-  hospital: 'Hôpitaux', pharmacy: 'Pharmacies', doctor: 'Médecins',
-  dentist: 'Dentistes', health: 'Santé',
-}
-const TYPE_COLORS: Record<string, string> = {
-  hospital: 'bg-rose-500', pharmacy: 'bg-emerald-500',
-  doctor: 'bg-blue-500', dentist: 'bg-purple-500', health: 'bg-teal-500',
+const CATEGORY_META: Record<string, { label: string; color: string }> = {
+  urgences_secours:   { label: 'Urgences & secours',   color: 'bg-red-500' },
+  soins_proximite:    { label: 'Soins de proximité',   color: 'bg-emerald-500' },
+  soins_specialises:  { label: 'Soins spécialisés',    color: 'bg-violet-500' },
+  maternite_enfance:  { label: 'Maternité & enfance',  color: 'bg-pink-500' },
+  produits_sante:     { label: 'Produits de santé',    color: 'bg-blue-500' },
+  diagnostic_analyse: { label: 'Diagnostic & analyse', color: 'bg-amber-500' },
 }
 const JOB_STATUS_STYLES: Record<string, { variant: 'default' | 'warning' | 'destructive' | 'secondary' | 'success'; label: string }> = {
   running:  { variant: 'default',     label: 'En cours' },
@@ -41,11 +41,10 @@ export function DashboardPage() {
     { label: 'Avec horaires', value: stats?.withHours, icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50' },
   ]
 
-  const topTypes = Object.entries(stats?.byType ?? {})
-    .filter(([k]) => TYPE_LABELS[k])
+  const topCategories = Object.entries(stats?.byCategory ?? {})
     .sort((a, b) => b[1] - a[1])
 
-  const maxTypeCount = topTypes[0]?.[1] ?? 1
+  const maxCategoryCount = topCategories[0]?.[1] ?? 1
 
   return (
     <div className="space-y-6">
@@ -85,32 +84,37 @@ export function DashboardPage() {
         {/* Types breakdown */}
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Répartition par type</CardTitle>
+            <CardTitle className="text-base">Répartition par catégorie</CardTitle>
           </CardHeader>
           <CardContent>
             {statsLoading ? (
               <div className="space-y-3">
                 {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
               </div>
-            ) : topTypes.length === 0 ? (
-              <p className="text-sm text-slate-400 text-center py-4">Aucune donnée</p>
+            ) : topCategories.length === 0 ? (
+              <p className="text-sm text-slate-400 text-center py-4">Aucune donnée classifiée</p>
             ) : (
               <div className="space-y-3">
-                {topTypes.slice(0, 6).map(([type, count]) => (
-                  <div key={type} className="space-y-1">
+                {topCategories.map(([slug, count]) => (
+                  <div key={slug} className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="font-medium text-slate-700">{TYPE_LABELS[type] ?? type}</span>
+                      <span className="font-medium text-slate-700">{CATEGORY_META[slug]?.label ?? slug}</span>
                       <span className="text-slate-400">{formatNumber(count)}</span>
                     </div>
                     <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ${TYPE_COLORS[type] ?? 'bg-slate-400'}`}
-                        style={{ width: `${(count / maxTypeCount) * 100}%` }}
+                        className={`h-full rounded-full transition-all duration-500 ${CATEGORY_META[slug]?.color ?? 'bg-slate-400'}`}
+                        style={{ width: `${(count / maxCategoryCount) * 100}%` }}
                       />
                     </div>
                   </div>
                 ))}
               </div>
+            )}
+            {stats != null && stats.unverified > 0 && (
+              <p className="mt-4 text-xs text-amber-600">
+                {formatNumber(stats.unverified)} entités encore à classifier
+              </p>
             )}
           </CardContent>
         </Card>

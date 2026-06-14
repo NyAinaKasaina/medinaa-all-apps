@@ -25,9 +25,52 @@ export interface MedicalEntity {
   emergency?: boolean
   osmUrl?: string
   tags?: Record<string, string>
+  // Taxonomie médicale (réorg 2026-06)
+  typeSlug?: string | null
+  categorySlug?: string | null
+  classificationStatus?: 'osm_auto' | 'verified' | 'unverified'
+  // Géographie
+  regionId?: number | null
+  districtId?: number | null
+  communeId?: number | null
+  fokontanyId?: number | null
   scrapedAt?: string
   createdAt: string
   updatedAt: string
+}
+
+export interface MedicalType {
+  slug: string
+  categorySlug: string
+  labelFr: string
+  labelMg?: string
+  labelEn?: string
+  description?: string
+  sortOrder: number
+}
+
+export interface MedicalCategory {
+  slug: string
+  labelFr: string
+  labelMg?: string
+  labelEn?: string
+  sortOrder: number
+  color?: string
+  icon?: string
+  types: MedicalType[]
+}
+
+export interface Region {
+  id: number
+  code?: string
+  name: string
+}
+
+export interface District {
+  id: number
+  regionId: number
+  code?: string
+  name: string
 }
 
 export interface PlacesResponse {
@@ -43,6 +86,8 @@ export interface PlacesStats {
   withPhone: number
   withWebsite: number
   withHours: number
+  unverified: number
+  byCategory: Record<string, number>
   byType: Record<string, number>
 }
 
@@ -80,17 +125,29 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 
 export const api = {
   places: {
-    list: (params: { q?: string; type?: string; city?: string; page?: number; limit?: number } = {}) => {
+    list: (params: { q?: string; category?: string; type?: string; regionId?: number; districtId?: number; status?: string; city?: string; page?: number; limit?: number } = {}) => {
       const q = new URLSearchParams()
-      if (params.q)    q.set('q',    params.q)
-      if (params.type) q.set('type', params.type)
-      if (params.city) q.set('city', params.city)
-      if (params.page) q.set('page', String(params.page))
-      if (params.limit) q.set('limit', String(params.limit))
+      if (params.q)          q.set('q',          params.q)
+      if (params.category)   q.set('category',   params.category)
+      if (params.type)       q.set('type',       params.type)
+      if (params.regionId)   q.set('regionId',   String(params.regionId))
+      if (params.districtId) q.set('districtId', String(params.districtId))
+      if (params.status)     q.set('status',     params.status)
+      if (params.city)       q.set('city',       params.city)
+      if (params.page)       q.set('page',       String(params.page))
+      if (params.limit)      q.set('limit',      String(params.limit))
       return request<PlacesResponse>(`${BASE}/places?${q}`)
     },
     stats: () => request<PlacesStats>(`${BASE}/places/stats`),
     get: (id: string) => request<MedicalEntity>(`${BASE}/places/${id}`),
+  },
+  taxonomy: {
+    tree:  () => request<MedicalCategory[]>(`${BASE}/taxonomy`),
+    types: () => request<MedicalType[]>(`${BASE}/taxonomy/types`),
+  },
+  geo: {
+    regions:   () => request<Region[]>(`${BASE}/regions`),
+    districts: (regionId: number) => request<District[]>(`${BASE}/regions/${regionId}/districts`),
   },
   scraper: {
     status: () => request<{ job: ScrapeJob | null }>(`${BASE}/scraper/status`).then(r => r.job),

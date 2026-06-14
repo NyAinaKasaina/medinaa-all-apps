@@ -1,26 +1,22 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Search, SlidersHorizontal, AlertCircle, Building2 } from 'lucide-react'
+import { Search, AlertCircle, Building2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PlaceCard } from '@/components/places/PlaceCard'
 import { api } from '@/lib/api'
+import { useTaxonomy } from '@/lib/taxonomy'
 import { cn, formatNumber } from '@/lib/utils'
 
-const FILTERS = [
-  { value: '', label: 'Tous' },
-  { value: 'hospital', label: 'Hôpitaux' },
-  { value: 'pharmacy', label: 'Pharmacies' },
-  { value: 'doctor', label: 'Médecins' },
-  { value: 'dentist', label: 'Dentistes' },
-  { value: 'health', label: 'Santé' },
-]
+const SELECT = 'h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 focus:border-emerald-400 focus:outline-none'
 
 export function PlacesPage() {
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
-  const [type, setType] = useState('')
+  const [category, setCategory] = useState('')
+  const [regionId, setRegionId] = useState<number | undefined>()
+  const [districtId, setDistrictId] = useState<number | undefined>()
   const [page, setPage] = useState(1)
 
   useEffect(() => {
@@ -29,16 +25,33 @@ export function PlacesPage() {
   }, [search])
 
   const resetPage = useCallback(() => setPage(1), [])
-  useEffect(resetPage, [debouncedSearch, type, resetPage])
+  useEffect(resetPage, [debouncedSearch, category, regionId, districtId, resetPage])
+
+  const { data: taxonomy } = useTaxonomy()
+  const { data: regions } = useQuery({ queryKey: ['regions'], queryFn: api.geo.regions, staleTime: Infinity })
+  const { data: districts } = useQuery({
+    queryKey: ['districts', regionId],
+    queryFn: () => api.geo.districts(regionId!),
+    enabled: !!regionId,
+    staleTime: Infinity,
+  })
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ['places', { q: debouncedSearch, type, page }],
-    queryFn: () => api.places.list({ q: debouncedSearch || undefined, type: type || undefined, page, limit: 20 }),
+    queryKey: ['places', { q: debouncedSearch, category, regionId, districtId, page }],
+    queryFn: () => api.places.list({
+      q: debouncedSearch || undefined,
+      category: category || undefined,
+      regionId,
+      districtId,
+      page,
+      limit: 20,
+    }),
   })
+
+  const chips = [{ slug: '', labelFr: 'Tous' }, ...(taxonomy ?? [])]
 
   return (
     <div className="space-y-4">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Entités médicales</h1>
         {data && <p className="text-slate-500 text-sm mt-1">{formatNumber(data.total)} établissements trouvés</p>}
@@ -49,12 +62,13 @@ export function PlacesPage() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
         <Input
           className="pl-9 h-11 text-base"
-          placeholder="Rechercher un hôpital, pharmacie, médecin…"
+          placeholder="Rechercher un établissement…"
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
         {search && (
           <button
+            aria-label="Effacer la recherche"
             className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
             onClick={() => setSearch('')}
           >
@@ -63,25 +77,45 @@ export function PlacesPage() {
         )}
       </div>
 
-      {/* Filter chips */}
+      {/* Category chips */}
       <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 -mx-4 px-4">
-        {FILTERS.map(f => (
+        {chips.map(c => (
           <button
-            key={f.value}
-            onClick={() => setType(f.value)}
+            key={c.slug}
+            onClick={() => setCategory(c.slug)}
             className={cn(
               'flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-150 cursor-pointer border',
-              type === f.value
+              category === c.slug
                 ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
                 : 'bg-white text-slate-600 border-slate-200 hover:border-emerald-300 hover:text-emerald-700',
             )}
           >
-            {f.label}
+            {c.labelFr}
           </button>
         ))}
       </div>
 
-      {/* Error */}
+      {/* Geo filters */}
+      <div className="flex flex-wrap gap-2">
+        <select
+          className={SELECT}
+          value={regionId ?? ''}
+          onChange={e => { const v = e.target.value; setRegionId(v ? Number(v) : undefined); setDistrictId(undefined) }}
+        >
+          <option value="">Toutes les régions</option>
+          {(regions ?? []).map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+        </select>
+        <select
+          className={cn(SELECT, !regionId && 'opacity-50')}
+          value={districtId ?? ''}
+          disabled={!regionId}
+          onChange={e => { const v = e.target.value; setDistrictId(v ? Number(v) : undefined) }}
+        >
+          <option value="">Tous les districts</option>
+          {(districts ?? []).map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+        </select>
+      </div>
+
       {isError && (
         <div className="flex items-center gap-2 text-red-600 text-sm p-4 bg-red-50 rounded-xl border border-red-100">
           <AlertCircle className="w-4 h-4" />
@@ -89,7 +123,6 @@ export function PlacesPage() {
         </div>
       )}
 
-      {/* Loading skeletons */}
       {isLoading && (
         <div className="space-y-3">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -103,7 +136,6 @@ export function PlacesPage() {
         </div>
       )}
 
-      {/* Results */}
       {!isLoading && data && (
         <>
           {data.items.length === 0 ? (
@@ -112,8 +144,8 @@ export function PlacesPage() {
                 <Building2 className="w-8 h-8 text-slate-300" />
               </div>
               <p className="text-slate-500 font-medium">Aucun résultat trouvé</p>
-              <p className="text-slate-400 text-sm">Essayez un autre terme de recherche</p>
-              <Button variant="outline" size="sm" onClick={() => { setSearch(''); setType('') }}>
+              <p className="text-slate-400 text-sm">Essayez d'autres filtres</p>
+              <Button variant="outline" size="sm" onClick={() => { setSearch(''); setCategory(''); setRegionId(undefined); setDistrictId(undefined) }}>
                 Réinitialiser les filtres
               </Button>
             </div>
@@ -123,26 +155,13 @@ export function PlacesPage() {
             </div>
           )}
 
-          {/* Pagination */}
           {data.pages > 1 && (
             <div className="flex items-center justify-between pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page <= 1}
-                onClick={() => setPage(p => p - 1)}
-              >
+              <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
                 Précédent
               </Button>
-              <span className="text-sm text-slate-500">
-                Page {page} / {data.pages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={page >= data.pages}
-                onClick={() => setPage(p => p + 1)}
-              >
+              <span className="text-sm text-slate-500">Page {page} / {data.pages}</span>
+              <Button variant="outline" size="sm" disabled={page >= data.pages} onClick={() => setPage(p => p + 1)}>
                 Suivant
               </Button>
             </div>
