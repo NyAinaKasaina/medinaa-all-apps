@@ -1,6 +1,5 @@
 import { useRef, useEffect, useState, useMemo } from 'react'
 import maplibregl from 'maplibre-gl'
-import 'maplibre-gl/dist/maplibre-gl.css'
 import { useQuery } from '@tanstack/react-query'
 import { Crosshair, Navigation, ExternalLink, Clock, Phone, X } from 'lucide-react'
 import { api, type PlaceFeature } from '@/lib/api'
@@ -28,23 +27,14 @@ function circle(lng: number, lat: number, km: number, n = 64) {
   return { type: 'Feature' as const, geometry: { type: 'Polygon' as const, coordinates: [coords] }, properties: {} }
 }
 
-// MapLibre est 100% WebGL : on détecte sa disponibilité pour dégrader proprement.
-// On LIBÈRE le contexte de test (sinon il compte dans la limite de contextes WebGL du navigateur).
-function webglAvailable(): boolean {
-  try {
-    const c = document.createElement('canvas')
-    const gl = (c.getContext('webgl') || c.getContext('experimental-webgl')) as WebGLRenderingContext | null
-    if (!gl) return false
-    gl.getExtension('WEBGL_lose_context')?.loseContext()
-    return true
-  } catch { return false }
-}
-
 export function MapPage() {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const [ready, setReady] = useState(false)
-  const [noWebgl, setNoWebgl] = useState(() => !webglAvailable())
+  // On ne pré-juge plus WebGL : on tente toujours l'init et on capture la VRAIE erreur
+  // (contexte WebGL, tuiles, style…) au lieu de l'avaler derrière un message générique.
+  const [mapError, setMapError] = useState<string | null>(null)
+  const [attempt, setAttempt] = useState(0) // incrémenté par « Réessayer » -> nouvelle tentative d'init
 
   const [category, setCategory] = useState('produits_sante')
   const [radiusKm, setRadiusKm] = useState(5)
@@ -64,16 +54,29 @@ export function MapPage() {
 
   // ---- init carte ----
   useEffect(() => {
-    if (!containerRef.current || mapRef.current || noWebgl) return
+    if (!containerRef.current || mapRef.current) return
     let map: maplibregl.Map
     try {
       map = new maplibregl.Map({ container: containerRef.current, style: STYLE, center: CENTER, zoom: 11 })
-    } catch {
-      setNoWebgl(true)
+    } catch (e: any) {
+      console.error('[Carte] Échec de création de MapLibre :', e)
+      setMapError(e?.message ? String(e.message) : 'Échec de création de la carte (WebGL indisponible ?)')
       return
     }
-    map.addControl(new maplibregl.NavigationControl(), 'top-right')
     mapRef.current = map
+    // Les erreurs MapLibre (création du contexte WebGL, tuiles, style) remontent en ASYNCHRONE ici.
+    // On les loggue toutes ; une erreur fatale de contexte WebGL bascule sur le repli fonctionnel.
+    map.on('error', (ev: any) => {
+      const msg = String(ev?.error?.message ?? ev?.error ?? ev?.message ?? 'Erreur MapLibre inconnue')
+      console.error('[Carte] Erreur MapLibre :', msg, ev)
+      if (/webgl|context lost|failed to initialize/i.test(msg)) {
+        setMapError(msg)
+        setReady(false)
+        try { map.remove() } catch { /* déjà retiré */ }
+        mapRef.current = null
+      }
+    })
+    map.addControl(new maplibregl.NavigationControl(), 'top-right')
     // Le conteneur peut ne pas avoir sa taille finale au montage (lazy-load, layout) -> resize.
     const ro = new ResizeObserver(() => map.resize())
     ro.observe(containerRef.current)
@@ -99,8 +102,8 @@ export function MapPage() {
       map.resize()
       setReady(true)
     })
-    return () => { ro.disconnect(); map.remove(); mapRef.current = null }
-  }, [])
+    return () => { ro.disconnect(); try { map.remove() } catch { /* déjà retiré */ }; mapRef.current = null }
+  }, [attempt])
 
   // ---- données points ----
   useEffect(() => {
@@ -196,16 +199,27 @@ export function MapPage() {
   const gmaps = (f: PlaceFeature) => `https://www.google.com/maps/dir/?api=1&destination=${f.geometry.coordinates[1]},${f.geometry.coordinates[0]}&travelmode=driving`
   const typeLabel = (slug?: string | null) => taxonomy?.flatMap((c) => c.types).find((t) => t.slug === slug)?.labelFr ?? slug ?? ''
 
-  // ---- Repli sans WebGL : carte visuelle indisponible, mais "plus proche + itinéraire" fonctionnel ----
-  if (noWebgl) {
+  // ---- Repli si la carte visuelle échoue : "plus proche + itinéraire" reste fonctionnel ----
+  const looksWebgl = mapError ? /webgl|context|initialize/i.test(mapError) : false
+  if (mapError) {
     return (
       <div className="space-y-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Carte</h1>
           <p className="text-slate-500 text-sm mt-1">Trouver l'établissement le plus proche et s'y rendre</p>
         </div>
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
-          La carte interactive nécessite <strong>WebGL</strong>, actuellement désactivé dans ce navigateur. Active l'accélération matérielle (voir l'aide en bas) pour l'afficher. En attendant, la recherche du plus proche reste utilisable ci-dessous.
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800 space-y-2">
+          <p>
+            {looksWebgl ? (
+              <>La carte interactive nécessite <strong>WebGL</strong>, qui n'a pas pu s'initialiser dans ce navigateur. Active l'accélération matérielle (aide en bas).</>
+            ) : (
+              <>La carte interactive n'a pas pu s'afficher.</>
+            )}{' '}En attendant, la recherche du plus proche reste pleinement utilisable ci-dessous.
+          </p>
+          <p className="font-mono text-[11px] text-amber-700 break-all">Détail : {mapError}</p>
+          <button onClick={() => { setMapError(null); setReady(false); setAttempt((a) => a + 1) }} className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 text-white text-xs font-medium px-3 py-1.5 hover:bg-amber-700">
+            Réessayer d'afficher la carte
+          </button>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <select className="h-10 rounded-lg border border-slate-200 px-3 text-sm min-w-[180px]" value={category} onChange={(e) => setCategory(e.target.value)}>
@@ -250,13 +264,13 @@ export function MapPage() {
             ))}
           </div>
         )}
-        <details className="text-xs text-slate-500 mt-2">
+        {looksWebgl && <details className="text-xs text-slate-500 mt-2">
           <summary className="cursor-pointer font-medium">Comment réactiver WebGL ?</summary>
           <div className="mt-2 space-y-1.5">
             <p><strong>Chrome / Edge</strong> : Paramètres → Système → « Utiliser l'accélération graphique si disponible » → activer, puis redémarrer. Vérifie sur <code>chrome://gpu</code> (WebGL doit être « Hardware accelerated »). Si bloqué : <code>chrome://flags/#ignore-gpu-blocklist</code> → Enabled → relancer.</p>
             <p><strong>Firefox</strong> : <code>about:config</code> → <code>webgl.disabled</code> = false (et <code>webgl.force-enabled</code> = true si besoin).</p>
           </div>
-        </details>
+        </details>}
       </div>
     )
   }
