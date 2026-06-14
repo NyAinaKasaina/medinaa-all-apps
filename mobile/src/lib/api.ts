@@ -11,14 +11,13 @@ export interface MedicalEntity {
   ownerId?: string | null
   typeSlug?: string | null; categorySlug?: string | null
   classificationStatus?: 'osm_auto' | 'verified' | 'unverified'
-  regionId?: number | null; districtId?: number | null; communeId?: number | null; fokontanyId?: number | null
+  codeFaritra?: string | null; codeDistrika?: string | null; codeKaominina?: string | null; codeFokontany?: string | null
   scrapedAt?: string; createdAt: string; updatedAt: string
 }
 
 export interface MedicalType { slug: string; categorySlug: string; labelFr: string; labelMg?: string; labelEn?: string; description?: string; sortOrder: number }
 export interface MedicalCategory { slug: string; labelFr: string; labelMg?: string; labelEn?: string; sortOrder: number; color?: string; icon?: string; types: MedicalType[] }
-export interface Region { id: number; code?: string; name: string }
-export interface District { id: number; regionId: number; code?: string; name: string }
+export interface GeoUnit { code: string; nom: string }
 
 export interface PlacesResponse { items: MedicalEntity[]; total: number; page: number; limit: number; pages: number }
 export interface PlacesStats { total: number; withPhone: number; withWebsite: number; withHours: number; unverified: number; byCategory: Record<string, number>; byType: Record<string, number> }
@@ -38,11 +37,12 @@ async function request<T>(path: string, init?: RequestInit, token?: string | nul
 
 export const api = {
   places: {
-    list: (p: { q?: string; category?: string; type?: string; regionId?: number; districtId?: number; status?: string; city?: string; page?: number; limit?: number } = {}) => {
+    list: (p: { q?: string; category?: string; type?: string; faritra?: string; distrika?: string; kaominina?: string; status?: string; city?: string; page?: number; limit?: number } = {}) => {
       const qs = new URLSearchParams()
       if (p.q) qs.set('q', p.q); if (p.category) qs.set('category', p.category); if (p.type) qs.set('type', p.type)
-      if (p.regionId !== undefined) qs.set('regionId', String(p.regionId))
-      if (p.districtId !== undefined) qs.set('districtId', String(p.districtId))
+      if (p.faritra) qs.set('faritra', p.faritra)
+      if (p.distrika) qs.set('distrika', p.distrika)
+      if (p.kaominina) qs.set('kaominina', p.kaominina)
       if (p.status) qs.set('status', p.status)
       if (p.city) qs.set('city', p.city); if (p.page !== undefined) qs.set('page', String(p.page))
       if (p.limit !== undefined) qs.set('limit', String(p.limit))
@@ -61,8 +61,9 @@ export const api = {
     types: () => request<MedicalType[]>('/api/taxonomy/types'),
   },
   geo: {
-    regions: () => request<Region[]>('/api/regions'),
-    districts: (regionId: number) => request<District[]>(`/api/regions/${regionId}/districts`),
+    faritra: () => request<GeoUnit[]>('/api/geo/faritra'),
+    distrika: (faritra: string) => request<GeoUnit[]>(`/api/geo/distrika?faritra=${faritra}`),
+    kaominina: (distrika: string) => request<GeoUnit[]>(`/api/geo/kaominina?distrika=${distrika}`),
   },
   auth: {
     register: (email: string, password: string, entityId?: string) =>
