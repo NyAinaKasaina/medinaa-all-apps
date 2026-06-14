@@ -99,7 +99,6 @@ export default function EntityDetailScreen() {
 
   if (!entity) return null
 
-  const type = entity.amenity ?? entity.healthcare
   const displayName = entity.name ?? '(Sans nom)'
   const hasCoords = entity.lat != null && entity.lng != null
 
@@ -137,7 +136,7 @@ export default function EntityDetailScreen() {
         {/* Header */}
         <Text style={styles.name}>{displayName}</Text>
         <View style={styles.headerRow}>
-          <TypeBadge type={type} />
+          <TypeBadge entity={entity} />
           {entity.ownerId && (
             <View style={styles.verifiedBadge}>
               <Ionicons

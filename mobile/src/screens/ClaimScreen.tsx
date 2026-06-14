@@ -59,7 +59,7 @@ export default function ClaimScreen() {
 
         <Card style={styles.entityCard}>
           <Text style={styles.entityName}>{entity.name ?? '(Sans nom)'}</Text>
-          <TypeBadge type={entity.amenity ?? entity.healthcare} style={{ marginTop: theme.spacing.xs }} />
+          <TypeBadge entity={entity} style={{ marginTop: theme.spacing.xs }} />
           {entity.addrCity && <Text style={styles.entityCity}>{entity.addrCity}</Text>}
         </Card>
 

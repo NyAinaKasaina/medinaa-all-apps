@@ -9,6 +9,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack'
 import type { RouteProp } from '@react-navigation/native'
 import theme from '@/theme/theme'
 import { api } from '@/lib/api'
+import { useTaxonomy, pickLabel } from '@/lib/taxonomy'
 import EntityCard from '@/components/entity/EntityCard'
 import Skeleton from '@/components/ui/Skeleton'
 import type { RootStackParamList } from '@/navigation/RootNavigator'
@@ -17,18 +18,18 @@ import type { MainTabParamList } from '@/navigation/MainTabNavigator'
 type Nav = NativeStackNavigationProp<RootStackParamList>
 type Route = RouteProp<MainTabParamList, 'Search'>
 
-const TYPE_OPTIONS = ['hospital', 'pharmacy', 'clinic', 'doctors', 'dentist', 'health_post', 'laboratory']
-
 export default function SearchScreen() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigation = useNavigation<Nav>()
   const route = useRoute<Route>()
   const [query, setQuery] = useState('')
   const [debouncedQ, setDebouncedQ] = useState('')
-  const [selectedType, setSelectedType] = useState<string | undefined>(route.params?.type)
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>(route.params?.type)
   const [emergencyOnly, setEmergencyOnly] = useState(false)
   const debounceRef = React.useRef<ReturnType<typeof setTimeout>>()
   React.useEffect(() => () => clearTimeout(debounceRef.current), [])
+
+  const { data: taxonomy } = useTaxonomy()
 
   const handleQueryChange = (text: string) => {
     setQuery(text)
@@ -37,8 +38,8 @@ export default function SearchScreen() {
   }
 
   const { data, isLoading } = useQuery({
-    queryKey: ['search', debouncedQ, selectedType],
-    queryFn: () => api.places.list({ q: debouncedQ || undefined, type: selectedType, limit: 50 }),
+    queryKey: ['search', debouncedQ, selectedCategory],
+    queryFn: () => api.places.list({ q: debouncedQ || undefined, category: selectedCategory, limit: 50 }),
     enabled: true,
   })
 
@@ -70,15 +71,15 @@ export default function SearchScreen() {
       {/* Type filter chips */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsScroll} contentContainerStyle={styles.chips}>
         <Pressable
-          onPress={() => setSelectedType(undefined)}
-          style={[styles.chip, !selectedType && styles.chipActive]}
+          onPress={() => setSelectedCategory(undefined)}
+          style={[styles.chip, !selectedCategory && styles.chipActive]}
         >
-          <Text style={[styles.chipText, !selectedType && styles.chipTextActive]}>{t('categories.all')}</Text>
+          <Text style={[styles.chipText, !selectedCategory && styles.chipTextActive]}>{t('categories.all')}</Text>
         </Pressable>
-        {TYPE_OPTIONS.map(type => (
-          <Pressable key={type} onPress={() => setSelectedType(type === selectedType ? undefined : type)}
-            style={[styles.chip, selectedType === type && styles.chipActive]}>
-            <Text style={[styles.chipText, selectedType === type && styles.chipTextActive]}>{t(`categories.${type}`, { defaultValue: type })}</Text>
+        {(taxonomy ?? []).map(cat => (
+          <Pressable key={cat.slug} onPress={() => setSelectedCategory(cat.slug === selectedCategory ? undefined : cat.slug)}
+            style={[styles.chip, selectedCategory === cat.slug && styles.chipActive]}>
+            <Text style={[styles.chipText, selectedCategory === cat.slug && styles.chipTextActive]}>{pickLabel(cat, i18n.language)}</Text>
           </Pressable>
         ))}
         <Pressable onPress={() => setEmergencyOnly(v => !v)}

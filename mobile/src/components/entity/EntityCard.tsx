@@ -21,7 +21,6 @@ interface EntityCardProps { entity: MedicalEntity; onPress: () => void; compact?
 export default function EntityCard({ entity, onPress, compact = false }: EntityCardProps) {
   const { t } = useTranslation()
   const userCoords = useCoords()
-  const type = entity.amenity ?? entity.healthcare
   const displayName = entity.name ?? '(Sans nom)'
   const dist = entity.lat != null && entity.lng != null
     ? calcDistance(userCoords.latitude, userCoords.longitude, entity.lat, entity.lng)
@@ -33,7 +32,7 @@ export default function EntityCard({ entity, onPress, compact = false }: EntityC
         <View style={styles.row}>
           <View style={styles.info}>
             <Text style={styles.name} numberOfLines={1}>{displayName}</Text>
-            <TypeBadge type={type} style={{ marginVertical: theme.spacing.xs }} />
+            <TypeBadge entity={entity} style={{ marginVertical: theme.spacing.xs }} />
             {entity.addrCity && <Text style={styles.sub} numberOfLines={1}>{entity.addrCity}</Text>}
           </View>
           <View style={styles.right}>
