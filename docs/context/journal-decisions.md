@@ -6,6 +6,18 @@ Format : `## YYYY-MM-DD — Titre` · **Contexte** / **Décision** / **Conséque
 
 ---
 
+## 2026-06-14 — Data cleaning : classification étendue + bilan enrichissement
+
+**Classification étendue (gratuit, migration `007`).** Reclassement des `unverified` depuis les tags OSM, plus large que le 1er pass (j'avais été trop prudent) : `doctors`/`doctor`→cabinet_medical_general, `health_post`(+nurse)→CSB1 / (+doctor)→CSB2, `nurse`→soins_infirmiers, `hospital`→**CHD (défaut documenté, CHU à reclasser)**. Résultat : **Classifiées 30% → 89%** (osm_auto 656→1942, à classifier 1521→**235**). Restent indéterminés : `clinic` (pas d'équivalent propre dans la taxo), tags génériques (`yes`, `health_facility`, `alternative`…). Statut `osm_auto` = auto, à vérifier (dashboard Qualité distingue Vérifié/Auto).
+
+**`--nameless` abandonné.** Pilote 1/25 (Google ne couvre pas les zones des 315 sans nom). Les noms manquants viendront du claim par les propriétaires.
+
+**Pollution hors-Madagascar détectée.** Le scrape OSM (bbox) a capté des entités de **Mayotte/Comores** (ex. « ...Chiconi », lat -12,8/lng 45,1) qui tombent dans la bbox mais hors pays (code_faritra NULL). À identifier précisément (vs grand Nord malgache légitime) et purger sur confirmation.
+
+**Pistes restantes pour la qualité.** Site web à 1% : récupérable via Google (champ `website`) pour les 728 entités déjà appariées (~12 $). Géo commune/fokontany au plafond du matching par nom (cf. README-geo).
+
+---
+
 ## 2026-06-14 — Enrichissement Google (bootstrap nom/tel/horaires)
 
 **Contexte.** Combler les gros trous de contact (149/2177 tél) depuis Google Places, en bootstrap ponctuel ; ensuite les propriétaires (comptes à venir) maintiendront la donnée. Champs voulus par Mickael : **nom, téléphone, horaires uniquement**.
