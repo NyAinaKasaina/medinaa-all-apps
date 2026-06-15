@@ -287,11 +287,11 @@ Le script lit la version depuis `app.json`, build avec Gradle, puis copie automa
 |---|---|
 | Fichier | `mobile/android/app/medinaa-release.jks` (gitignored) |
 | Alias | `medinaa` |
-| Password | `MedinaaProd@2026!` |
+| Password | dans `mobile/android/keystore.properties` (gitignored) + gestionnaire de mots de passe |
 | Validité | 10 000 jours (~2053), RSA 2048 bits |
-| SHA-256 cert | `60:31:7B:8F:...:B2:1B:08:1E` |
+| SHA-256 cert | `9E:51:10:D0:66:3F:8A:18:E7:68:3F:FD:5B:39:6A:50:F8:F4:CA:0E:5B:00:1C:55:49:69:25:30:C7:1F:5B:B5` |
 
-> Le `.jks` est exclu du git. Le conserver en lieu sûr (gestionnaire de mots de passe). Sans lui, impossible de mettre à jour l'app sur les appareils existants.
+> Keystore régénéré le 2026-06-13 (rotation après exposition de l'ancien mot de passe dans le repo public). Le `.jks` et `keystore.properties` sont exclus du git. Les secrets de signature vivent dans `mobile/android/keystore.properties` (format dans `keystore.properties.example`). Sans le `.jks` + son mot de passe, impossible de mettre à jour l'app sur les appareils existants : à conserver dans un gestionnaire de mots de passe.
 
 ### Prérequis
 - Java 17+, `ANDROID_HOME` défini, NDK 27.1.12297006 installé

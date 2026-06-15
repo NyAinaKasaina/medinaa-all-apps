@@ -8,11 +8,19 @@ export interface MedicalEntity {
   addrCity?: string; addrDistrict?: string; addrProvince?: string
   operator?: string; operatorType?: string; beds?: number
   emergency?: boolean; osmUrl?: string; tags?: Record<string, string>
-  ownerId?: string | null; scrapedAt?: string; createdAt: string; updatedAt: string
+  ownerId?: string | null
+  typeSlug?: string | null; categorySlug?: string | null
+  classificationStatus?: 'osm_auto' | 'verified' | 'unverified'
+  codeFaritra?: string | null; codeDistrika?: string | null; codeKaominina?: string | null; codeFokontany?: string | null
+  scrapedAt?: string; createdAt: string; updatedAt: string
 }
 
+export interface MedicalType { slug: string; categorySlug: string; labelFr: string; labelMg?: string; labelEn?: string; description?: string; sortOrder: number }
+export interface MedicalCategory { slug: string; labelFr: string; labelMg?: string; labelEn?: string; sortOrder: number; color?: string; icon?: string; types: MedicalType[] }
+export interface GeoUnit { code: string; nom: string }
+
 export interface PlacesResponse { items: MedicalEntity[]; total: number; page: number; limit: number; pages: number }
-export interface PlacesStats { total: number; withPhone: number; withWebsite: number; withHours: number; byType: Record<string, number> }
+export interface PlacesStats { total: number; withPhone: number; withWebsite: number; withHours: number; unverified: number; byCategory: Record<string, number>; byType: Record<string, number> }
 export interface AuthResponse { token: string; user: { id: string; email: string } }
 
 async function request<T>(path: string, init?: RequestInit, token?: string | null): Promise<T> {
@@ -29,9 +37,13 @@ async function request<T>(path: string, init?: RequestInit, token?: string | nul
 
 export const api = {
   places: {
-    list: (p: { q?: string; type?: string; city?: string; page?: number; limit?: number } = {}) => {
+    list: (p: { q?: string; category?: string; type?: string; faritra?: string; distrika?: string; kaominina?: string; status?: string; city?: string; page?: number; limit?: number } = {}) => {
       const qs = new URLSearchParams()
-      if (p.q) qs.set('q', p.q); if (p.type) qs.set('type', p.type)
+      if (p.q) qs.set('q', p.q); if (p.category) qs.set('category', p.category); if (p.type) qs.set('type', p.type)
+      if (p.faritra) qs.set('faritra', p.faritra)
+      if (p.distrika) qs.set('distrika', p.distrika)
+      if (p.kaominina) qs.set('kaominina', p.kaominina)
+      if (p.status) qs.set('status', p.status)
       if (p.city) qs.set('city', p.city); if (p.page !== undefined) qs.set('page', String(p.page))
       if (p.limit !== undefined) qs.set('limit', String(p.limit))
       return request<PlacesResponse>(`/api/places?${qs}`)
@@ -43,6 +55,15 @@ export const api = {
     claim: (id: string, token: string) =>
       request<MedicalEntity>(`/api/places/${id}/claim`, { method: 'POST' }, token),
     myPlaces: (token: string) => request<MedicalEntity[]>('/api/me/places', {}, token),
+  },
+  taxonomy: {
+    tree: () => request<MedicalCategory[]>('/api/taxonomy'),
+    types: () => request<MedicalType[]>('/api/taxonomy/types'),
+  },
+  geo: {
+    faritra: () => request<GeoUnit[]>('/api/geo/faritra'),
+    distrika: (faritra: string) => request<GeoUnit[]>(`/api/geo/distrika?faritra=${faritra}`),
+    kaominina: (distrika: string) => request<GeoUnit[]>(`/api/geo/kaominina?distrika=${distrika}`),
   },
   auth: {
     register: (email: string, password: string, entityId?: string) =>

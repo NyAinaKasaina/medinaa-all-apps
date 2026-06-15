@@ -12,10 +12,14 @@ expo-env.d.ts
 # Native
 *.orig.*
 *.jks
+*.jks.bak-*
 *.p8
 *.p12
 *.key
 *.mobileprovision
+
+# Secrets de signature release (ne jamais commiter)
+android/keystore.properties
 
 # Metro
 .metro-health-check*

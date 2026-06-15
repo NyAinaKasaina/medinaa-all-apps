@@ -1,10 +1,12 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, MapPin, Settings2, Download } from 'lucide-react'
+import { LayoutDashboard, Map, MapPin, Gauge, Settings2, Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const TABS = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard', end: true },
+  { to: '/carte', icon: Map, label: 'Carte' },
   { to: '/places', icon: MapPin, label: 'Entités' },
+  { to: '/quality', icon: Gauge, label: 'Qualité' },
   { to: '/scraper', icon: Settings2, label: 'Scraper' },
   { to: '/export', icon: Download, label: 'Export' },
 ]

@@ -22,6 +22,12 @@ export class PlacesController {
     return this.service.stats();
   }
 
+  @Get('geojson')
+  @ApiOperation({ summary: 'Entités en GeoJSON pour la carte (filtre ?category=)' })
+  geojson(@Query('category') category?: string) {
+    return this.service.geojson(category);
+  }
+
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
   @Post(':id/claim')

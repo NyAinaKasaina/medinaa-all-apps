@@ -1,10 +1,12 @@
 import { NavLink } from 'react-router-dom'
-import { LayoutDashboard, MapPin, Settings2, Download, Cross } from 'lucide-react'
+import { LayoutDashboard, Map, MapPin, Gauge, Settings2, Download, Cross } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const NAV = [
   { to: '/', icon: LayoutDashboard, label: 'Tableau de bord', end: true },
+  { to: '/carte', icon: Map, label: 'Carte' },
   { to: '/places', icon: MapPin, label: 'Entités médicales' },
+  { to: '/quality', icon: Gauge, label: 'Qualité des données' },
   { to: '/scraper', icon: Settings2, label: 'Scraper' },
   { to: '/export', icon: Download, label: 'Export' },
 ]
@@ -53,7 +55,7 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="px-6 py-4 border-t border-slate-100">
-        <p className="text-xs text-slate-400">v1.0 — Google Places API</p>
+        <p className="text-xs text-slate-400">v1.0 · Données OpenStreetMap</p>
       </div>
     </aside>
   )

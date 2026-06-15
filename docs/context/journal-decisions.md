@@ -1,0 +1,197 @@
+# Journal des décisions et leçons
+
+> ADR léger. Une entrée par décision structurante ou erreur évitée, la plus récente en haut. Objectif : que Claude (et l'équipe) apprenne des choix passés et ne repose pas deux fois la même question.
+
+Format : `## YYYY-MM-DD — Titre` · **Contexte** / **Décision** / **Conséquences** / **Leçon**.
+
+---
+
+## 2026-06-14 · Carte web : VRAIE cause racine du « pas affichée » (conteneur effondré à 0 px, cascade CSS Tailwind/MapLibre)
+
+**Contexte.** Malgré les correctifs précédents (suppression du pré-gate WebGL, écoute de `map.on('error')`, CSS global), la carte ne s'affichait toujours pas : cadre vide, aucune tuile, panneau de filtres visible. WebGL et réseau OpenFreeMap étaient pourtant sains.
+
+**Cause racine (prouvée par repro headless Chromium via CDP : DOM mesuré + console + réseau + screenshot).** Le conteneur `<div ref={containerRef} className="absolute inset-0">` était rendu en `position: relative` (pas `absolute`). MapLibre ajoute la classe `maplibregl-map` au conteneur, et `maplibre-gl/dist/maplibre-gl.css` contient `.maplibregl-map { position: relative }`. Cette feuille est importée APRÈS Tailwind dans `main.tsx` ; à spécificité égale (un sélecteur de classe), la dernière importée gagne, donc elle écrase `.absolute`. En `position: relative`, `inset-0` n'agit plus sur les dimensions → hauteur du conteneur = auto = **0 px** (son seul enfant peint, le canvas, est en `position:absolute`, hors flux). Le wrapper `overflow-hidden` masquait le canvas. « Carte invisible » = effondrement de hauteur CSS, jamais WebGL.
+
+**Décision / réalisé.**
+1. Conteneur : `absolute inset-0` -> **`h-full w-full`** (hauteur explicite, indépendante de `position`, portée par le wrapper `h-[calc(100dvh-12rem)] min-h-[460px]`). Vérifié : 563 px desktop, 458 px en viewport court (le `min-h` prend le relais), OK mobile 390 et 360.
+2. Bug latent corrigé : le handler `map.on('error')` d'une instance retirée (double-mount StrictMode, HMR, bouton « Réessayer ») pouvait, sur une perte de contexte WebGL tardive (`"context lost"` matche le regex), faire `mapRef.current=null` sur la map vivante et afficher le repli à tort (intermittent, probable coupable des régressions répétées). Garde ajoutée en tête du handler : `if (mapRef.current !== map) return`.
+3. Durcissement : effets data gardés (`mapRef.current?.getSource(...)`, `if (!src) return`) pour qu'un remount ne fasse pas tomber l'error boundary `RouteError` (qui masquerait la carte).
+
+Vérifié : `tsc --noEmit` 0 erreur, repro à froid 0 exception, tuiles visibles. Le backend (port 3000) était arrêté pendant le diagnostic -> `/api/*` en 500 -> 0 marqueur et listes vides (problème séparé, pas le bug d'affichage).
+
+**Leçon.** Avec Tailwind + une lib qui apporte sa propre CSS (MapLibre, Mapbox, etc.), une classe utilitaire (`.absolute`) peut être écrasée par une règle de même spécificité importée plus tard : ne jamais faire dépendre la taille d'un conteneur de carte/canvas de `position:absolute` seul, lui donner une **hauteur explicite** (`h-full`/`height`). Et reproduire pour de vrai (Chromium headless via CDP : mesurer le DOM rendu, pas relire le code) tranche en minutes ce que des hypothèses successives n'avaient pas réglé. Les deux entrées ci-dessous (« WebGL désactivé », « pré-gate WebGL ») étaient des causes partielles ou erronées ; la cause finale était CSS. Voir mémoire [[project-carte-css-hauteur]].
+
+---
+
+## 2026-06-14 · Carte web : cause racine du « pas affichée » (pré-gate WebGL)
+
+**Contexte.** Après l'ajout de la carte, elle ne s'affichait plus. Premier diagnostic (erroné) : « WebGL désactivé dans l'environnement de Mickael ». Symptôme qui invalide cette piste : « WebGL activé sur Chrome mais carte pas affichée, sur **plusieurs navigateurs** ». Un problème d'environnement WebGL serait résolu en l'activant, et ne serait pas commun à tous les navigateurs.
+
+**Cause racine.** Un **pré-gate `webglAvailable()`** que j'avais ajouté (vérif `canvas.getContext('webgl')` synchrone, exécutée une seule fois au montage via `useState`). S'il renvoie `false` (faux négatif possible), il bascule sur le repli et **bloque la carte sur tous les navigateurs**, quel que soit l'état réel de WebGL. De plus, les vraies erreurs de contexte WebGL de MapLibre arrivent en **asynchrone** via `map.on('error')` (`type: webglcontextcreationerror`), que le code n'écoutait pas : toute erreur était étiquetée « WebGL désactivé ».
+
+**Réalisé.** Suppression du pré-gate. On tente toujours l'init, on écoute `map.on('error')`, on logge la vraie erreur en console et on l'affiche dans le repli (+ bouton « Réessayer »). CSS MapLibre passé en import **global** (`main.tsx`) plutôt que dans le chunk lazy. Réseau vérifié sain le jour même : OpenFreeMap (style/tuile/sprite/glyphs HTTP 200) et `/api/places/geojson` (200). Commit `b58d41b`.
+
+**Leçon.** Ne jamais gater une lib WebGL (MapLibre, three.js) derrière une détection synchrone unique : faux négatif = écran bloqué partout. Tenter l'init, écouter l'event d'erreur, **surfacer la vraie cause** au lieu d'un message générique. Et : « échoue sur plusieurs navigateurs » pointe vers le code/la config, pas vers l'environnement.
+
+---
+
+## 2026-06-14 — Passe Design/UX : exploiter l'espace horizontal (3 experts)
+
+**Contexte.** Demande : mieux exploiter l'espace horizontal de l'app web. Audit par 3 experts en parallèle (ui-designer `aa8e7fb6b15be1d68`, frontend-developer `a8ec792359099363e`, ux-researcher `a456a3969a6b1c9b2`). Diagnostic unanime : **`AppLayout.tsx:31` plafonnait tout à `max-w-4xl` (896px) centré** → ~46% de largeur gâchée sur 1920px, et pages en colonne unique.
+
+**Réalisé.**
+- **Conteneur** : `max-w-4xl` → `max-w-[1600px] mx-auto px-4 md:px-6 lg:px-8`. `TITLES` complété (/carte, /quality).
+- **Entités** (PlacesPage) : liste de cartes → **grille responsive** `sm:grid-cols-2 xl:grid-cols-3` (+ skeleton). PlaceCard `h-full` (hauteurs égales). Sélecteurs `min-w-[150px]`.
+- **Détail** (PlaceDetailPage) : colonne unique → **2 colonnes** `lg:grid-cols-3` (infos `col-span-2` + panneau actions/coordonnées `lg:sticky`). Lien site `max-w-full`.
+- **Dashboard / Qualité** : grilles `md:grid-cols-2` → `lg:grid-cols-3` ; carte Complétude en 4 barres `xl:grid-cols-4`.
+- **Export / Scraper** : cartes empilées → côte à côte (`md:grid-cols-2` / `lg:grid-cols-2`).
+
+**Reste (reco UX researcher, plus gros refactor).** Pour la data-curation à fort volume : vue **tableau dense** (scanner 2000 lignes) + **master-detail** (liste+détail côte à côte sans navigation) sur PlacesPage. Évolution suivante.
+
+**Vérifié.** Build frontend OK. Rendu visuel à confirmer par Mickael (`npm run dev`).
+
+---
+
+## 2026-06-14 — Carte interactive (type Google Maps) + plus proche par la route
+
+**Contexte.** Fonctionnalité phare : se géolocaliser, chercher une catégorie ouverte dans un rayon, et obtenir l'itinéraire vers la plus proche. App web (le mobile/Kasaina a déjà sa MapScreen). Le frontend web n'avait aucune carte.
+
+**Stack (gratuit, sans clé).** MapLibre GL JS + tuiles **OpenFreeMap** `liberty` (comme le mobile). Géoloc navigateur. **Plus proche = par la ROUTE** (exigence Mickael, pas vol d'oiseau) : pré-filtre rayon en Haversine (gratuit) puis classement des ~20 meilleurs candidats par **distance routière via OSRM Table** (matrice user→candidats, gratuit). Itinéraire tracé via **OSRM route** + bouton **« Ouvrir dans Google Maps »** (deep link) pour la navigation. OSRM public = dev (à self-host pour la prod).
+
+**Réalisé.** Backend : `GET /api/places/geojson?category=` (FeatureCollection, 2041 points). Frontend : `lib/openingHours.ts` (`isOpenNow`, parse Google FR + OSM), `haversineKm`, `pages/MapPage.tsx` (carte clusterisée colorée par catégorie, « Ma position » + cercle de rayon, filtres catégorie/rayon/ouvert, liste triée par distance routière avec « le plus proche (route) » + temps, carte détail + itinéraire). Onglet « Carte » (sidebar + bottom nav), route lazy-loadée (MapLibre ~900 Ko hors bundle initial).
+
+**Vérifié.** Builds OK. OSRM testé sur Antananarivo (Table + Route = code Ok, distances routières correctes). geojson pharmacies = 454. **Rendu visuel à valider** par Mickael (`npm run dev`, géoloc nécessite localhost/HTTPS).
+
+**Limites.** « Ouvert maintenant » : seulement les ~13% avec horaires. Classement routier limité aux 20 meilleurs candidats (vol d'oiseau au-delà). OSRM public non-prod.
+
+**WebGL requis (bug résolu 2026-06-14).** MapLibre GL est 100% WebGL ; sur la machine de Mickael WebGL était désactivé (« WebGL is currently disabled », fréquent sous Linux quand l'accélération matérielle est off / GPU blocklisté). `MapPage` détecte désormais l'absence de WebGL (`webglAvailable()` + try/catch) et bascule sur un **repli fonctionnel sans carte** : filtres + géoloc + liste classée par route (OSRM Table) + lien itinéraire Google Maps, plus une aide pour réactiver WebGL (chrome://gpu, hardware accel). Le vrai correctif visuel = réactiver WebGL côté navigateur.
+
+---
+
+## 2026-06-14 — Data cleaning : classification étendue + bilan enrichissement
+
+**Classification étendue (gratuit, migration `007`).** Reclassement des `unverified` depuis les tags OSM, plus large que le 1er pass (j'avais été trop prudent) : `doctors`/`doctor`→cabinet_medical_general, `health_post`(+nurse)→CSB1 / (+doctor)→CSB2, `nurse`→soins_infirmiers, `hospital`→**CHD (défaut documenté, CHU à reclasser)**. Résultat : **Classifiées 30% → 89%** (osm_auto 656→1942, à classifier 1521→**235**). Restent indéterminés : `clinic` (pas d'équivalent propre dans la taxo), tags génériques (`yes`, `health_facility`, `alternative`…). Statut `osm_auto` = auto, à vérifier (dashboard Qualité distingue Vérifié/Auto).
+
+**`--nameless` abandonné.** Pilote 1/25 (Google ne couvre pas les zones des 315 sans nom). Les noms manquants viendront du claim par les propriétaires.
+
+**Purge hors-Madagascar (migration `008`).** Le scrape OSM (bbox) avait capté **136 entités de Mayotte/Comores** (noms comoriens/mahorais, toutes code_faritra NULL = hors territoire). Supprimées via boîtes géographiques explicites (backup pré-purge fait). Effet : **total 2177 → 2041, géolocalisation 94% → 100%** (les 136 étaient tout le « sans région »).
+
+**Site web (Google, ~12 $).** `scripts/google-website.cjs` : Place Details (champ website) pour les entités appariées → **72 sites comblés** (31 → ~103 avant purge, 82 après).
+
+**Extension taxonomie (migration `009`).** Les 212 restants venaient d'un trou de taxo (pas de type « clinique ») + de tags OSM génériques. Ajout de 3 types (soins_proximite) : `clinique_polyclinique`, `maison_repos`, `medecine_traditionnelle`, puis mapping (clinic→clinique 110, nursing_home→maison_repos 15, alternative→medecine_traditionnelle 7). Classifiées **90% → 96%** (unverified 212→**80**). Le frontend lit la taxo en direct (/api/taxonomy) → nouveaux types visibles sans recompiler. **Reste 80 irréductibles** : `healthcare=yes` (50), `health_facility` (20), `counselling` (7)… = tags OSM sans info de type → seuls les propriétaires les qualifieront.
+
+**Bilan qualité (denominateur 2041, vs début de session à 2177).** Classifiées 30%→**96%** · Géolocalisées 94%→**100%** · Téléphone 7%→**17%** · Horaires 5%→**13%** · Site web 1%→**4%** · Nom **86%**. Plafonds atteints : tél/horaires/site = couverture Google ; commune/fokontany = matching par nom ; noms manquants + 80 non classés → claim propriétaires.
+
+---
+
+## 2026-06-14 — Enrichissement Google (bootstrap nom/tel/horaires)
+
+**Contexte.** Combler les gros trous de contact (149/2177 tél) depuis Google Places, en bootstrap ponctuel ; ensuite les propriétaires (comptes à venir) maintiendront la donnée. Champs voulus par Mickael : **nom, téléphone, horaires uniquement**.
+
+**Approche.** Script `backend/scripts/google-enrich.cjs` (clé `GOOGLE_MAPS_API_KEY` dans `.env`). Pour chaque entité nommée : **Nearby Search par rayon strict + mot-clé (nom)** puis filtre par token distinctif du nom (précision), puis Place Details (name, formatted_phone_number, opening_hours). **Comble uniquement les champs vides** (jamais d'écrasement). Stockage durable limité au `google_place_id` (+ `google_enriched_at`), conforme ToS ; nom/tel/horaires transitoires puis owner-maintained. Migration `006`.
+
+**Pilotes (2026-06-14).** Premier jet `Find Place` : appariement bruité (faux homonymes lointains). Passage en Nearby+rayon+filtre de nom → net mieux. Pilote ciblé Analamanga (urbain) : **17/25 appariés, 15 tél + 11 horaires comblés** (~60%/44%). Rural : rendement plus faible (Google peu fourni hors villes). Décision : run complet pertinent (rendement variable selon zone).
+
+**À retenir.** Google couvre bien le médical urbain (Antananarivo), peu le rural. Ne pas étendre aux notes/avis/photos (ToS). Les ~315 entités sans nom ne sont pas recherchables par texte (option `--nameless` = nearby, faible confiance).
+
+---
+
+## 2026-06-14 — Onglet « Qualité des données » (data cleaning)
+
+**Contexte.** Entrée en phase de data cleaning : besoin d'un tableau de bord visualisant la pertinence/complétude des entités (classifiées ou pas, géolocalisées ou pas). App web admin uniquement.
+
+**Réalisé.**
+- **Backend** : `stats` enrichi de `byStatus` (verified/osm_auto/unverified), `geo` (complétude faritra/distrika/kaominina/fokontany) et `withName`. `query-places` : param `geo=located|missing` (a une région / sans région).
+- **Frontend** : nouvelle page `DataQualityPage` (`/quality`, onglet « Qualité » dans sidebar + bottom nav) : 2 scores en-tête (% classifiées, % géolocalisées), carte Classification (barres cliquables → liste filtrée), entonnoir Géolocalisation (région→district→commune→fokontany + lien « sans région »), complétude des champs. PlacesPage : filtre `geo` (Géolocalisé / Sans région) lu aussi depuis l'URL.
+
+**Vérifié.** Builds OK. API : `stats` renvoie byStatus/geo/withName ; `?geo=missing`=136, `?geo=located`=2041.
+
+---
+
+## 2026-06-14 — Adaptation UX de l'app web admin au nouveau schéma
+
+**Contexte.** Le schéma enrichi (taxonomie + géo INSTAT) avait l'intégration fonctionnelle de base ; l'UX ne l'exploitait pas pleinement. Périmètre : **app web admin uniquement** (Kasaina gère le mobile). Affichage + filtres, sans nouvelle auth (l'édition/curation inline du type est reportée car elle nécessite une auth admin).
+
+**Réalisé.**
+- **Backend** (read-only) : `places.service.findOne` renvoie `geo: {faritra/distrika/kaominina/fokontany: {code,nom}}` (résolu via la table fokontany au niveau le plus profond) ; `stats` ajoute `byFaritra`. `export.service` CSV enrichi des colonnes taxonomie + géo (le JSON les avait déjà).
+- **Frontend** : `lib/geo.ts` (`useFaritraLabel`, `prettyGeo`). PlaceDetailPage : fil d'Ariane administratif faritra›distrika›kaominina›fokontany + libellé catégorie + badge « à classifier », adresse OSM reléguée en secondaire. PlacesPage : filtres type (sous-catégorie), commune, statut (+ init `?status=unverified` depuis l'URL). PlaceCard : région officielle + badge « à classifier ». DashboardPage : carte « Répartition par région » + compteur à classifier cliquable. Nettoyage : footer sidebar et colonnes d'export (résidus « Google Places » supprimés).
+
+**Vérifié.** Builds backend + frontend OK. API : `/places/:id` renvoie `geo`, `/places/stats` renvoie `byFaritra` (23), CSV contient les colonnes taxonomie+géo.
+
+**Reste (itération suivante).** Auth admin + édition/assignation du type depuis le web (curation inline des 1521 `unverified`). Vérif visuelle navigateur non faite ici (build + API validés).
+
+---
+
+## 2026-06-13 — Réorg phase 2 : géographie alignée sur data-personne (codes officiels INSTAT)
+
+**Contexte.** Mickael a pointé le projet `data-personne` comme référence pour la structure géo. Celui-ci utilise la **codification officielle INSTAT** : codes hiérarchiques auto-imbriqués (faritra CHAR(2) < distrika CHAR(4) < kaominina CHAR(6) < fokontany CHAR(8)) dans une table `fokontany` dénormalisée (codes + noms aux 4 niveaux). Sa base `datapersonne` (localhost) contient une référence **complète** : 19 336 fokontany, 1704 communes, 119 districts, 23 régions.
+
+**Décisions (validées).** (1) Remplacer mes 4 tables normalisées à IDs entiers par la table `fokontany` dénormalisée (structure data-personne) + colonnes `code_faritra/distrika/kaominina/fokontany` sur `medical_entities`. (2) Rattachement best-effort : région/district fiable, commune/fokontany au mieux.
+
+**Actions réalisées.**
+- **DB** : script `005_geo_align_datapersonne.sql` (drop ancien géo, crée `fokontany` dénormalisée + colonnes codes). Copie des 19 336 fokontany officiels depuis `datapersonne` (`\copy`).
+- **Géocodage** : `backend/scripts/geo-enrich.cjs` (point-in-polygon Node, sans PostGIS) contre les limites geoBoundaries (ADM1-4, gitignored dans `backend/data/geo/`), match noms→codes officiels. Couverture : **faritra 94%, distrika 91%, kaominina 63%, fokontany 52%** (2177 entités). Ajustements : alias « Matsiatra Ambony »→Haute Matsiatra, arrondissements d'Antananarivo→ANTANANARIVO_I..VI, région fusionnée Vatovavy-Fitovinany résolue via district, repli par préfixe commun pour les variantes (Atsimo/Sud...).
+- **Backend** : entité `Fokontany` dénormalisée (remplace Region/District/Commune/Fokontany), `GeoModule` → `GET /api/geo/{faritra,distrika,kaominina}` (code+nom). `places` filtre par `faritra/distrika/kaominina` (codes). Build + smoke test OK (23 régions, filtre faritra=11 → 535 entités Analamanga).
+- **Frontend + mobile** : interfaces `code_*` + `GeoUnit{code,nom}`, endpoints geo, sélecteurs faritra/distrika par code (frontend). Build/tsc OK.
+
+**Leçon.** Deux référentiels à marier : codes officiels (data-personne, sans géométrie) + polygones (geoBoundaries, sans codes), pont par noms. Fiable aux niveaux grossiers, dégradé au fokontany (17 465 polygones ≠ 19 336 fokontany, noms divergents). geoBoundaries = 22 régions (pré-réforme) vs 23 officielles → gérer les régions scindées via le district. **Réutiliser la structure d'un projet jumeau (codes INSTAT) > réinventer un schéma géo.**
+
+---
+
+## 2026-06-13 — Réorg schéma phase 1 : taxonomie médicale + hiérarchie géographique
+
+**Contexte.** Mise en œuvre du plan de réorg (taxonomie 6 catégories / 25 types adaptée au système de santé MDG, hiérarchie géo Région > District > Commune > Fokontany), validée via 3 décisions : tables de référence, géo structure + seed Régions/Districts (géocodage en phase 2), mapping auto des types évidents + statut `unverified` pour les ambigus.
+
+**Actions réalisées (les 3 apps).**
+- **DB** : 4 scripts SQL idempotents dans `backend/src/migrations/` (001 schéma, 002 seed taxonomie, 003 seed 24 régions + 114 districts, 004 mapping OSM→type). `synchronize` passé à **false** (schéma géré par SQL). Résultat : 6 cat, 25 types, 24 régions, 114 districts ; 656 entités auto-classées, 1521 `unverified` ; 2177 intactes.
+- **Backend** : entités `MedicalCategory/MedicalType/Region/District/Commune/Fokontany` + 7 colonnes sur `MedicalEntity`. Modules read `TaxonomyModule` (`GET /api/taxonomy`, `/taxonomy/types`) et `GeoModule` (`GET /api/regions`, `/regions/:id/districts`). `places.service` : filtres `category/type/regionId/districtId/status`, stats `byCategory`+`unverified`, curation via `typeSlug` (PATCH owner → `classification_status='verified'`). Smoke test OK.
+- **Frontend** : `lib/taxonomy.ts` (hook + couleurs catégorie), `TypeBadge` piloté par `typeSlug`, `PlacesPage` filtres catégorie + région/district dépendants, `DashboardPage` répartition par catégorie + « à classifier ». Build OK.
+- **Mobile** : idem (taxonomy hook, TypeBadge, Home/Search par catégorie, EditEntityScreen sélecteur de type pour curation propriétaire). tsc OK.
+
+**Conséquences / reste (phase 2).** Reverse-geocoding lat/lng → géo (PostGIS non installé), seed Communes/Fokontany, complétion des districts (liste ~114 à vérifier vs INSTAT), curation des 1521 `unverified`, suppression des colonnes OSM legacy. Colonnes OSM (`amenity`/`healthcare`/`addr_*`) conservées en lecture seule comme repli.
+
+**Leçon.** Le mapping OSM est plus pauvre que prévu (30% auto-classés, pas 60%) : l'OSM ne distingue ni CHU/CHD ni CSB1/CSB2, et `doctors` (754) est laissé `unverified` par prudence. La richesse de la taxonomie métier dépasse la donnée source → la curation humaine (admin + propriétaires) est centrale, pas optionnelle.
+
+---
+
+## 2026-06-13 — Correctifs critiques pré-réorg (B-1, S-1, S-3) + filet migrations
+
+**Contexte.** Après l'audit, Mickael a validé l'exécution des correctifs critiques et du filet migrations avant la réorg.
+
+**Décision / actions réalisées.**
+- **B-1** : `@Controller('auth')` (était `'api/auth'`). Vérifié bout-en-bout (route mappée `/api/auth/login`, ancienne route 404).
+- **S-3** : `getOrThrow('JWT_SECRET')` + `JWT_SECRET` fort généré dans `.env`, placeholder dans `.env.example`.
+- **S-1** : keystore **rotaté** (l'ancien `.jks` était absent de la machine, rotation sans perte). Nouveau mot de passe dans `mobile/android/keystore.properties` (gitignored). `build.gradle` lit ce fichier. Secrets retirés de `CLAUDE.md` + `gradle.properties`. Nouveau SHA-256 documenté.
+- **Filet migrations** : `pg_dump` complet + schéma dans `backend/data/`, fichier fallback `osm_medical_madagascar.json` **régénéré** (il était absent !), dossier `backend/src/migrations/` + README, `synchronize` inversé en fail-safe `=== 'development'`. Backend rebuild + smoke test OK (2177 entités intactes).
+
+**Conséquences.** La génération de la migration `InitialSchema` TypeORM est reportée au démarrage de la réorg (droit CREATEDB requis). L'ancien secret keystore reste dans l'historique git mais est inoffensif.
+
+**Leçon.** Un smoke test a tué le serveur de dev de Mickael (`pkill -f dist/main` a attrapé l'enfant de son `nest --watch`). Toujours vérifier les process actifs et tester sur un port distinct. Voir la mémoire `feedback-ne-pas-tuer-dev-server`.
+
+---
+
+## 2026-06-13 — Audit fondateur + structuration du contexte
+
+**Contexte.** Avant une réorganisation du schéma de données, Mickael a demandé un audit approfondi multi-experts puis la mise en place d'une mémoire/contexte durable pour Claude.
+
+**Décision.** Audit mené par 5 experts (data, backend, frontend, mobile, sécurité), consolidé dans `docs/audit/2026-06-13-audit-complet.md`. Création de `docs/context/` (état, dette, plan reorg, ce journal) comme source de vérité vivante, plus une mémoire persistante côté Claude.
+
+**Conséquences.** Le `CLAUDE.md` racine est identifié comme périmé (ignore auth, mobile, claim). `docs/context/etat-du-projet.md` prime désormais. La réorg du schéma se fera dans une session ultérieure, sur la base de `reorg-schema-plan.md`.
+
+**Leçon.** Ne jamais traiter le `CLAUDE.md` racine comme la vérité absolue sur l'état du code : il décrit l'intention initiale, pas l'état courant. Vérifier dans le code et `docs/context/`.
+
+---
+
+## 2026-06-13 — Pré-requis bloquant : migrations avant tout changement de schéma
+
+**Contexte.** Le projet tourne en `synchronize: true` (hors prod) sans aucune migration versionnée. La réorg va modifier des colonnes sur 2177 entités.
+
+**Décision.** Aucun changement de schéma ne sera fait tant que `synchronize: false` + migration initiale ne sont pas en place.
+
+**Conséquences.** Étape A-1 placée en tête de la dette, en amont de toute la réorg.
+
+**Leçon.** Sous `synchronize: true`, un simple renommage de propriété d'entité = DROP/CREATE de colonne = perte de données silencieuse. Le filet (migration + sauvegarde) se pose AVANT de toucher au schéma, jamais après.
+
+---
+
+<!-- Ajouter les nouvelles décisions au-dessus de cette ligne -->

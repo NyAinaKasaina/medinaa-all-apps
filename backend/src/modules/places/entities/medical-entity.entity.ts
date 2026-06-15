@@ -85,6 +85,37 @@ export class MedicalEntity {
   @Column({ type: 'varchar', nullable: true, default: null, name: 'owner_id' })
   ownerId: string | null;
 
+  // Taxonomie médicale (réorg 2026-06-13). type_slug NULL = à classifier.
+  @Column({ type: 'varchar', nullable: true, name: 'type_slug' })
+  typeSlug: string | null;
+
+  @Column({ type: 'varchar', nullable: true, name: 'category_slug' })
+  categorySlug: string | null;
+
+  @Column({ name: 'classification_status', default: 'unverified' })
+  classificationStatus: string;
+
+  // Hiérarchie géographique — codes officiels INSTAT (faritra > distrika > kaominina > fokontany).
+  // Profondeur variable selon le géocodage (best-effort commune/fokontany).
+  @Column({ type: 'varchar', length: 2, nullable: true, name: 'code_faritra' })
+  codeFaritra: string | null;
+
+  @Column({ type: 'varchar', length: 4, nullable: true, name: 'code_distrika' })
+  codeDistrika: string | null;
+
+  @Column({ type: 'varchar', length: 6, nullable: true, name: 'code_kaominina' })
+  codeKaominina: string | null;
+
+  @Column({ type: 'varchar', length: 8, nullable: true, name: 'code_fokontany' })
+  codeFokontany: string | null;
+
+  // Enrichissement Google (bootstrap nom/tel/horaires). Seul le place_id est stocké durablement.
+  @Column({ type: 'varchar', nullable: true, name: 'google_place_id' })
+  googlePlaceId: string | null;
+
+  @Column({ nullable: true, name: 'google_enriched_at' })
+  googleEnrichedAt: Date;
+
   @Column({ nullable: true, name: 'scraped_at' })
   scrapedAt: Date;
 

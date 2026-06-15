@@ -12,8 +12,11 @@ function csvCell(v: string | number | boolean | null | undefined): string {
 }
 
 const CSV_HEADERS = [
-  'osm_id', 'osm_type', 'name', 'name_mg', 'amenity', 'healthcare',
+  'osm_id', 'osm_type', 'name', 'name_mg',
+  'type_slug', 'category_slug', 'classification_status',
+  'amenity', 'healthcare',
   'lat', 'lng', 'phone', 'website', 'opening_hours',
+  'code_faritra', 'code_distrika', 'code_kaominina', 'code_fokontany',
   'addr_street', 'addr_housenumber', 'addr_city', 'addr_district', 'addr_province',
   'operator', 'operator_type', 'beds', 'emergency', 'osm_url', 'scraped_at',
 ];
@@ -35,9 +38,11 @@ export class ExportService {
     const rows = entities.map((e) =>
       [
         e.osmId, e.osmType, e.name, e.nameMg,
+        e.typeSlug, e.categorySlug, e.classificationStatus,
         e.amenity, e.healthcare,
         e.lat, e.lng,
         e.phone, e.website, e.openingHours,
+        e.codeFaritra, e.codeDistrika, e.codeKaominina, e.codeFokontany,
         e.addrStreet, e.addrHousenumber, e.addrCity, e.addrDistrict, e.addrProvince,
         e.operator, e.operatorType, e.beds, e.emergency,
         e.osmUrl, e.scrapedAt?.toISOString(),

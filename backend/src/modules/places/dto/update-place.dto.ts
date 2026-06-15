@@ -12,4 +12,6 @@ export class UpdatePlaceDto {
   @IsString()  @IsOptional() @emptyToNull() addrCity?: string | null
   @IsBoolean() @IsOptional() emergency?: boolean
   @IsNumber()  @IsOptional() beds?: number
+  // Curation : le propriétaire précise le type exact (validé côté service contre medical_types).
+  @IsString()  @IsOptional() @emptyToNull() typeSlug?: string | null
 }

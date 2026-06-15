@@ -1,11 +1,14 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowLeft, MapPin, Phone, Globe, Clock, ExternalLink, AlertCircle, Bed, Stethoscope } from 'lucide-react'
+import { ArrowLeft, MapPin, MapPinned, Phone, Globe, Clock, ExternalLink, AlertCircle, Bed, Stethoscope } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { TypeBadge, primaryType } from '@/components/places/TypeBadge'
+import { TypeBadge } from '@/components/places/TypeBadge'
 import { api } from '@/lib/api'
+import { useTaxonomy, CATEGORY_CLASSES } from '@/lib/taxonomy'
+import { prettyGeo } from '@/lib/geo'
+import { cn } from '@/lib/utils'
 
 export function PlaceDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -17,7 +20,9 @@ export function PlaceDetailPage() {
     enabled: !!id,
   })
 
-  const type = place ? primaryType(place) : undefined
+  const { data: taxonomy } = useTaxonomy()
+  const category = taxonomy?.find(c => c.slug === place?.categorySlug)
+
   const displayName = place?.name ?? place?.nameMg ?? '(Sans nom)'
   const fullAddress = [
     place?.addrHousenumber,
@@ -26,6 +31,11 @@ export function PlaceDetailPage() {
     place?.addrDistrict,
     place?.addrProvince,
   ].filter(Boolean).join(', ')
+  const geoPath = place?.geo
+    ? [place.geo.faritra, place.geo.distrika, place.geo.kaominina, place.geo.fokontany]
+        .filter(Boolean)
+        .map(g => prettyGeo(g!.nom))
+    : []
 
   return (
     <div className="space-y-5">
@@ -55,7 +65,15 @@ export function PlaceDetailPage() {
         <>
           <div className="space-y-2">
             <div className="flex flex-wrap gap-2 items-center">
-              {type && <TypeBadge type={type} />}
+              <TypeBadge entity={place} />
+              {category && (
+                <span className={cn('text-xs font-medium px-2.5 py-0.5 rounded-full', CATEGORY_CLASSES[category.slug] ?? 'bg-slate-100 text-slate-600')}>
+                  {category.labelFr}
+                </span>
+              )}
+              {place.classificationStatus === 'unverified' && (
+                <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700">À classifier</span>
+              )}
               {place.emergency && (
                 <span className="text-xs font-medium px-2.5 py-0.5 rounded-full bg-red-100 text-red-700">Urgences 24h</span>
               )}
@@ -69,10 +87,16 @@ export function PlaceDetailPage() {
             )}
           </div>
 
-          <Card>
+          <div className="grid gap-5 lg:grid-cols-3 lg:items-start">
+          <Card className="lg:col-span-2">
             <CardContent className="p-4 divide-y divide-slate-100">
+              {geoPath.length > 0 && (
+                <InfoRow icon={MapPinned} label="Localisation administrative">
+                  <span className="text-slate-900">{geoPath.join(' › ')}</span>
+                </InfoRow>
+              )}
               {fullAddress && (
-                <InfoRow icon={MapPin} label="Adresse">{fullAddress}</InfoRow>
+                <InfoRow icon={MapPin} label="Adresse (OSM)">{fullAddress}</InfoRow>
               )}
               {place.phone && (
                 <InfoRow icon={Phone} label="Téléphone">
@@ -81,7 +105,7 @@ export function PlaceDetailPage() {
               )}
               {place.website && (
                 <InfoRow icon={Globe} label="Site web">
-                  <a href={place.website} target="_blank" rel="noreferrer" className="text-emerald-600 hover:underline truncate max-w-[220px] inline-block">
+                  <a href={place.website} target="_blank" rel="noreferrer" className="text-emerald-600 hover:underline truncate max-w-full inline-block">
                     {place.website.replace(/^https?:\/\//, '')}
                   </a>
                 </InfoRow>
@@ -100,8 +124,9 @@ export function PlaceDetailPage() {
             </CardContent>
           </Card>
 
+          <div className="space-y-3 lg:sticky lg:top-6">
           {place.osmUrl && (
-            <a href={place.osmUrl} target="_blank" rel="noreferrer">
+            <a href={place.osmUrl} target="_blank" rel="noreferrer" className="block">
               <Button variant="outline" className="w-full">
                 <ExternalLink className="w-4 h-4" />
                 Voir sur OpenStreetMap
@@ -110,13 +135,15 @@ export function PlaceDetailPage() {
           )}
 
           {place.lat && place.lng && (
-            <a href={`https://maps.google.com/?q=${place.lat},${place.lng}`} target="_blank" rel="noreferrer">
+            <a href={`https://maps.google.com/?q=${place.lat},${place.lng}`} target="_blank" rel="noreferrer" className="block">
               <Button variant="ghost" size="sm" className="w-full text-slate-400">
                 <MapPin className="w-3.5 h-3.5" />
                 {place.lat.toFixed(6)}, {place.lng.toFixed(6)}
               </Button>
             </a>
           )}
+          </div>
+          </div>
         </>
       )}
     </div>

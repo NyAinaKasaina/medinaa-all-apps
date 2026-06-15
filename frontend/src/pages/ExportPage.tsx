@@ -70,7 +70,7 @@ export function ExportPage() {
       </Card>
 
       {/* Export options */}
-      <div className="space-y-3">
+      <div className="grid gap-3 md:grid-cols-2">
         <ExportCard
           icon={FileJson}
           title="Export JSON"
@@ -96,7 +96,7 @@ export function ExportPage() {
         <CardContent className="p-4">
           <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Colonnes incluses</p>
           <div className="flex flex-wrap gap-1.5">
-            {['place_id','name','formatted_address','lat','lng','types','phone_number','website','rating','user_ratings_total','business_status','opening_hours','google_maps_url','scraped_at'].map(col => (
+            {['osm_id','name','name_mg','type_slug','category_slug','classification_status','amenity','healthcare','lat','lng','phone','website','opening_hours','code_faritra','code_distrika','code_kaominina','code_fokontany','addr_city','operator','beds','emergency','osm_url','scraped_at'].map(col => (
               <span key={col} className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-mono">
                 {col}
               </span>

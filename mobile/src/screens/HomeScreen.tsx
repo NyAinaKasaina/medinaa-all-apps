@@ -10,6 +10,7 @@ import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs'
 import type { CompositeNavigationProp } from '@react-navigation/native'
 import theme from '@/theme/theme'
 import { api } from '@/lib/api'
+import { useTaxonomy, CATEGORY_STYLE, pickLabel } from '@/lib/taxonomy'
 import { useCoords } from '@/context/LocationContext'
 import EntityCard from '@/components/entity/EntityCard'
 import Skeleton from '@/components/ui/Skeleton'
@@ -21,29 +22,6 @@ type Nav = CompositeNavigationProp<
   NativeStackNavigationProp<RootStackParamList>
 >
 
-const CATEGORIES = [
-  { key: 'hospital', icon: 'medkit' as const },
-  { key: 'pharmacy', icon: 'medical' as const },
-  { key: 'doctor', icon: 'person' as const },
-  { key: 'clinic', icon: 'business' as const },
-  { key: 'csb', icon: 'home' as const },
-  { key: 'dentist', icon: 'happy' as const },
-  { key: 'laboratory', icon: 'flask' as const },
-  { key: 'emergency', icon: 'flash' as const },
-  { key: 'all', icon: 'grid' as const },
-]
-
-const OSM_TYPE_MAP: Record<string, string> = {
-  hospital: 'hospital',
-  pharmacy: 'pharmacy',
-  doctor: 'doctors',
-  clinic: 'clinic',
-  csb: 'health_post',
-  dentist: 'dentist',
-  laboratory: 'laboratory',
-  emergency: 'hospital',
-}
-
 function calcDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
   const R = 6371
   const dLat = (lat2 - lat1) * Math.PI / 180
@@ -53,9 +31,11 @@ function calcDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
 }
 
 export default function HomeScreen() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigation = useNavigation<Nav>()
   const userCoords = useCoords()
+
+  const { data: taxonomy } = useTaxonomy()
 
   const { data, isLoading } = useQuery({
     queryKey: ['places', 'nearby'],
@@ -69,9 +49,8 @@ export default function HomeScreen() {
       calcDistance(userCoords.latitude, userCoords.longitude, b.lat!, b.lng!)
     ).slice(0, 10) ?? []
 
-  const handleCategoryPress = useCallback((key: string) => {
-    const type = key === 'all' ? undefined : OSM_TYPE_MAP[key]
-    navigation.navigate('Search', { type })
+  const handleCategoryPress = useCallback((slug?: string) => {
+    navigation.navigate('Search', { type: slug })
   }, [navigation])
 
   const goToDetail = useCallback((id: string) => navigation.navigate('EntityDetail', { id }), [navigation])
@@ -95,14 +74,20 @@ export default function HomeScreen() {
         {/* Categories */}
         <Text style={styles.sectionTitle}>{t('home.categories')}</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categories}>
-          {CATEGORIES.map(cat => (
-            <Pressable key={cat.key} onPress={() => handleCategoryPress(cat.key)} style={styles.catBtn}>
+          {(taxonomy ?? []).map(cat => (
+            <Pressable key={cat.slug} onPress={() => handleCategoryPress(cat.slug)} style={styles.catBtn}>
               <View style={styles.catIcon}>
-                <Ionicons name={cat.icon} size={22} color={theme.colors.primary} />
+                <Ionicons name={CATEGORY_STYLE[cat.slug]?.icon ?? 'grid'} size={22} color={theme.colors.primary} />
               </View>
-              <Text style={styles.catLabel} numberOfLines={2}>{t(`categories.${cat.key}`)}</Text>
+              <Text style={styles.catLabel} numberOfLines={2}>{pickLabel(cat, i18n.language)}</Text>
             </Pressable>
           ))}
+          <Pressable key="all" onPress={() => handleCategoryPress(undefined)} style={styles.catBtn}>
+            <View style={styles.catIcon}>
+              <Ionicons name="grid" size={22} color={theme.colors.primary} />
+            </View>
+            <Text style={styles.catLabel} numberOfLines={2}>{t('categories.all')}</Text>
+          </Pressable>
         </ScrollView>
 
         {/* Nearby */}
