@@ -17,6 +17,15 @@ const STATUS_CONFIG = {
   pending:  { label: 'En attente', variant: 'secondary'   as const, icon: Clock,        spin: false },
 }
 
+// Étapes du pipeline « scrap + mise à jour » (la barre est à 100% dès la fin de la collecte ;
+// ces libellés indiquent le post-traitement encore en cours).
+const PHASE_LABEL: Record<string, string> = {
+  scrap: 'Collecte OSM…',
+  reclassification: 'Classification des nouvelles entités…',
+  purge: 'Purge des entités hors Madagascar…',
+  geocodage: 'Géocodage (rattachement aux fokontany)…',
+}
+
 function formatDate(iso?: string) {
   if (!iso) return '—'
   return new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(iso))
@@ -64,7 +73,7 @@ export function ScraperPage() {
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Scraper OSM</h1>
-        <p className="text-slate-500 text-sm mt-1">Collecte via OpenStreetMap · Overpass API</p>
+        <p className="text-slate-500 text-sm mt-1">Collecte OpenStreetMap + mise à jour (classification, géo) en une passe</p>
       </div>
 
       {isError && (
@@ -107,6 +116,11 @@ export function ScraperPage() {
               <p className="text-xs text-slate-400">
                 {pct.toFixed(1)}% · démarré {formatDate(job.startedAt)}
               </p>
+              {isRunning && job.phase && PHASE_LABEL[job.phase] && (
+                <p className="text-xs font-medium text-emerald-600 flex items-center gap-1.5 pt-0.5">
+                  <Loader2 className="w-3 h-3 animate-spin" /> {PHASE_LABEL[job.phase]}
+                </p>
+              )}
             </div>
           ) : (
             !isLoading && (

@@ -6,6 +6,23 @@ Format : `## YYYY-MM-DD — Titre` · **Contexte** / **Décision** / **Conséque
 
 ---
 
+## 2026-06-14 · Carte web : VRAIE cause racine du « pas affichée » (conteneur effondré à 0 px, cascade CSS Tailwind/MapLibre)
+
+**Contexte.** Malgré les correctifs précédents (suppression du pré-gate WebGL, écoute de `map.on('error')`, CSS global), la carte ne s'affichait toujours pas : cadre vide, aucune tuile, panneau de filtres visible. WebGL et réseau OpenFreeMap étaient pourtant sains.
+
+**Cause racine (prouvée par repro headless Chromium via CDP : DOM mesuré + console + réseau + screenshot).** Le conteneur `<div ref={containerRef} className="absolute inset-0">` était rendu en `position: relative` (pas `absolute`). MapLibre ajoute la classe `maplibregl-map` au conteneur, et `maplibre-gl/dist/maplibre-gl.css` contient `.maplibregl-map { position: relative }`. Cette feuille est importée APRÈS Tailwind dans `main.tsx` ; à spécificité égale (un sélecteur de classe), la dernière importée gagne, donc elle écrase `.absolute`. En `position: relative`, `inset-0` n'agit plus sur les dimensions → hauteur du conteneur = auto = **0 px** (son seul enfant peint, le canvas, est en `position:absolute`, hors flux). Le wrapper `overflow-hidden` masquait le canvas. « Carte invisible » = effondrement de hauteur CSS, jamais WebGL.
+
+**Décision / réalisé.**
+1. Conteneur : `absolute inset-0` -> **`h-full w-full`** (hauteur explicite, indépendante de `position`, portée par le wrapper `h-[calc(100dvh-12rem)] min-h-[460px]`). Vérifié : 563 px desktop, 458 px en viewport court (le `min-h` prend le relais), OK mobile 390 et 360.
+2. Bug latent corrigé : le handler `map.on('error')` d'une instance retirée (double-mount StrictMode, HMR, bouton « Réessayer ») pouvait, sur une perte de contexte WebGL tardive (`"context lost"` matche le regex), faire `mapRef.current=null` sur la map vivante et afficher le repli à tort (intermittent, probable coupable des régressions répétées). Garde ajoutée en tête du handler : `if (mapRef.current !== map) return`.
+3. Durcissement : effets data gardés (`mapRef.current?.getSource(...)`, `if (!src) return`) pour qu'un remount ne fasse pas tomber l'error boundary `RouteError` (qui masquerait la carte).
+
+Vérifié : `tsc --noEmit` 0 erreur, repro à froid 0 exception, tuiles visibles. Le backend (port 3000) était arrêté pendant le diagnostic -> `/api/*` en 500 -> 0 marqueur et listes vides (problème séparé, pas le bug d'affichage).
+
+**Leçon.** Avec Tailwind + une lib qui apporte sa propre CSS (MapLibre, Mapbox, etc.), une classe utilitaire (`.absolute`) peut être écrasée par une règle de même spécificité importée plus tard : ne jamais faire dépendre la taille d'un conteneur de carte/canvas de `position:absolute` seul, lui donner une **hauteur explicite** (`h-full`/`height`). Et reproduire pour de vrai (Chromium headless via CDP : mesurer le DOM rendu, pas relire le code) tranche en minutes ce que des hypothèses successives n'avaient pas réglé. Les deux entrées ci-dessous (« WebGL désactivé », « pré-gate WebGL ») étaient des causes partielles ou erronées ; la cause finale était CSS. Voir mémoire [[project-carte-css-hauteur]].
+
+---
+
 ## 2026-06-14 · Carte web : cause racine du « pas affichée » (pré-gate WebGL)
 
 **Contexte.** Après l'ajout de la carte, elle ne s'affichait plus. Premier diagnostic (erroné) : « WebGL désactivé dans l'environnement de Mickael ». Symptôme qui invalide cette piste : « WebGL activé sur Chrome mais carte pas affichée, sur **plusieurs navigateurs** ». Un problème d'environnement WebGL serait résolu en l'activant, et ne serait pas commun à tous les navigateurs.

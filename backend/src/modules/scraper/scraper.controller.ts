@@ -20,10 +20,11 @@ export class ScraperController {
   }
 
   @Get('status')
-  @ApiOperation({ summary: 'Statut du dernier job (avec les erreurs)' })
+  @ApiOperation({ summary: 'Statut du dernier job (avec les erreurs) + phase du pipeline' })
   async status() {
     const job = await this.service.getStatus();
-    return { job };
+    // `phase` (en mémoire) reflète l'étape courante : scrap -> reclassification -> purge -> géocodage.
+    return { job: job ? { ...job, phase: this.service.getPhase() } : null };
   }
 
   @Get('jobs')

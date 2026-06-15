@@ -4,14 +4,30 @@ import {
   OnApplicationBootstrap,
   OnApplicationShutdown,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
+import { Repository, DataSource } from 'typeorm';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { ScrapeJob, ScrapeJobStatus } from './entities/scrape-job.entity';
 import { ScrapeError } from './entities/scrape-error.entity';
 import { PlacesService } from '../places/places.service';
 import { OverpassClient } from './utils/overpass.client';
 import { BATCH_SIZE } from '../../common/config/scraper.config';
 import type { OsmElement } from '../../common/types';
+
+const execFileAsync = promisify(execFile);
+
+// Étapes du pipeline « scrap + mise à jour en une passe », exposées à l'UI.
+export type ScrapePhase =
+  | 'idle' | 'scrap' | 'reclassification' | 'purge' | 'geocodage' | 'done' | 'failed';
+
+// Post-traitement déterministe rejoué après chaque scrap. Ces SQL ne touchent QUE les lignes
+// `classification_status='unverified'` (008 purge par géo) : la curation manuelle est préservée.
+const RECLASSIFY_SQL = ['004_map_osm_to_types.sql', '007_classify_more.sql', '009_taxonomy_extend.sql'];
+const PURGE_SQL = '008_purge_hors_mdg.sql';
+const GEO_FILES = ['mdg-ADM1.geojson', 'mdg-ADM2.geojson', 'mdg-ADM3.geojson', 'mdg-ADM4.geojson'];
 
 function parseElement(el: OsmElement) {
   const tags = el.tags ?? {};
@@ -56,6 +72,7 @@ export class ScraperService implements OnApplicationBootstrap, OnApplicationShut
   private readonly logger = new Logger(ScraperService.name);
   private isRunning = false;
   private shouldPause = false;
+  private phase: ScrapePhase = 'idle'; // étape courante du pipeline (en mémoire, exposée par /status)
 
   constructor(
     @InjectRepository(ScrapeJob)
@@ -64,7 +81,13 @@ export class ScraperService implements OnApplicationBootstrap, OnApplicationShut
     private readonly errorRepo: Repository<ScrapeError>,
     private readonly placesService: PlacesService,
     private readonly overpass: OverpassClient,
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
   ) {}
+
+  getPhase(): ScrapePhase {
+    return this.phase;
+  }
 
   async onApplicationBootstrap() {
     await this.jobRepo.update(
@@ -117,6 +140,7 @@ export class ScraperService implements OnApplicationBootstrap, OnApplicationShut
   private async runScrape(job: ScrapeJob): Promise<void> {
     this.isRunning = true;
     this.shouldPause = false;
+    this.phase = 'scrap';
 
     try {
       // Fetch depuis Overpass
@@ -153,12 +177,19 @@ export class ScraperService implements OnApplicationBootstrap, OnApplicationShut
         await this.jobRepo.save(job);
       }
 
+      // ---- Mise à jour en une passe : curation déterministe + géocodage ----
+      // Le scrap a inséré/rafraîchi les données OSM brutes ; on enchaîne le post-traitement
+      // (reclassification des 'unverified', purge hors-MDG, géocodage) sans 2e action manuelle.
+      await this.runPostProcess();
+
       job.status = ScrapeJobStatus.DONE;
       job.savedNodes = elements.length;
       job.lastUpdatedAt = new Date();
       await this.jobRepo.save(job);
-      this.logger.log(`Job ${job.id} terminé: ${job.savedNodes} entités sauvegardées`);
+      this.phase = 'done';
+      this.logger.log(`Job ${job.id} terminé: ${job.savedNodes} entités + mise à jour`);
     } catch (err: unknown) {
+      this.phase = 'failed';
       job.status = ScrapeJobStatus.FAILED;
       job.lastUpdatedAt = new Date();
       await this.jobRepo.save(job);
@@ -166,5 +197,62 @@ export class ScraperService implements OnApplicationBootstrap, OnApplicationShut
     } finally {
       this.isRunning = false;
     }
+  }
+
+  // ---- Post-traitement « mise à jour » enchaîné après le scrap ----
+  // Chaque étape est isolée : un échec de curation/géocodage n'invalide pas les données brutes
+  // déjà sauvegardées (le job finit DONE, l'étape ratée est seulement loguée).
+  private async runPostProcess(): Promise<void> {
+    try {
+      this.phase = 'reclassification';
+      for (const file of RECLASSIFY_SQL) await this.runSqlFile(file);
+    } catch (err) {
+      this.logger.error(`Reclassification échouée (données brutes conservées) : ${(err as Error).message}`);
+    }
+    try {
+      this.phase = 'purge';
+      await this.runSqlFile(PURGE_SQL);
+    } catch (err) {
+      this.logger.error(`Purge hors-MDG échouée : ${(err as Error).message}`);
+    }
+    try {
+      this.phase = 'geocodage';
+      await this.geocode();
+    } catch (err) {
+      this.logger.error(`Géocodage échoué (codes géo inchangés) : ${(err as Error).message}`);
+    }
+  }
+
+  // Exécute un script SQL de migration via la connexion TypeORM (pas de dépendance à `psql`).
+  private async runSqlFile(file: string): Promise<void> {
+    const full = path.join(process.cwd(), 'src', 'migrations', file);
+    if (!fs.existsSync(full)) {
+      this.logger.warn(`SQL de curation introuvable, étape sautée : ${full}`);
+      return;
+    }
+    await this.dataSource.query(fs.readFileSync(full, 'utf8'));
+    this.logger.log(`Curation appliquée : ${file}`);
+  }
+
+  // Géocodage point-in-polygon (script .cjs séparé). Sauté proprement si les GeoJSON locaux
+  // (170 Mo, gitignorés) ou le script sont absents : les codes géo existants restent intacts.
+  private async geocode(): Promise<void> {
+    const geoDir = path.join(process.cwd(), 'data', 'geo');
+    const missing = GEO_FILES.filter((f) => !fs.existsSync(path.join(geoDir, f)));
+    const script = path.join(process.cwd(), 'scripts', 'geo-enrich.cjs');
+    if (missing.length > 0 || !fs.existsSync(script)) {
+      this.logger.warn(
+        `Géocodage sauté : ${missing.length ? 'GeoJSON manquants (' + missing.join(', ') + ')' : 'script absent'}`,
+      );
+      return;
+    }
+    this.logger.log('Géocodage des entités (point-in-polygon)…');
+    const { stdout } = await execFileAsync('node', ['--max-old-space-size=4096', script], {
+      cwd: process.cwd(),
+      maxBuffer: 16 * 1024 * 1024,
+      timeout: 10 * 60_000,
+      env: process.env,
+    });
+    this.logger.log(`Géocodage terminé. ${stdout.trim().split('\n').slice(-4).join(' | ')}`);
   }
 }

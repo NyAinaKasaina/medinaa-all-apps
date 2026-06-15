@@ -113,8 +113,14 @@ export class PlacesService {
 
   async upsert(data: Partial<MedicalEntity>): Promise<MedicalEntity> {
     const existing = await this.repo.findOneBy({ osmId: data.osmId });
-    if (existing) return this.repo.save(Object.assign(existing, data));
-    return this.repo.save(this.repo.create(data));
+    if (!existing) return this.repo.save(this.repo.create(data));
+    // Mise à jour OSM NON destructive : on actualise les champs fournis par OSM, mais on
+    // n'écrase jamais une valeur existante par null/undefined. Préserve l'enrichissement Google
+    // et la curation (nom/tél/horaires comblés) que des re-scraps répétés effaceraient sinon.
+    const patch = Object.fromEntries(
+      Object.entries(data).filter(([, v]) => v !== null && v !== undefined),
+    );
+    return this.repo.save(Object.assign(existing, patch));
   }
 
   async claimPlace(id: string, userId: string): Promise<MedicalEntity> {

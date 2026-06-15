@@ -120,9 +120,12 @@ export interface ScrapeError {
   occurredAt: string
 }
 
+export type ScrapePhase = 'idle' | 'scrap' | 'reclassification' | 'purge' | 'geocodage' | 'done' | 'failed'
+
 export interface ScrapeJob {
   id: string
   status: 'pending' | 'running' | 'paused' | 'done' | 'failed'
+  phase?: ScrapePhase // étape courante du pipeline (présente sur le job retourné par /status)
   totalNodes: number
   savedNodes: number
   startedAt?: string
