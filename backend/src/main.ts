@@ -9,6 +9,10 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
+  app.enableCors({
+    origin: [process.env.LANDING_ORIGIN ?? 'http://localhost:3001', 'https://medinaa.mg'],
+  });
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true,

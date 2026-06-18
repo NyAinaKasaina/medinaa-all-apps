@@ -16,6 +16,8 @@ import { MedicalType } from './modules/taxonomy/entities/medical-type.entity';
 import { Fokontany } from './modules/geo/entities/fokontany.entity';
 import { TaxonomyModule } from './modules/taxonomy/taxonomy.module';
 import { GeoModule } from './modules/geo/geo.module';
+import { AnalyticsModule } from './analytics/analytics.module';
+import { AnalyticsEvent } from './analytics/analytics-event.entity';
 
 @Module({
   imports: [
@@ -33,6 +35,7 @@ import { GeoModule } from './modules/geo/geo.module';
         entities: [
           MedicalEntity, ScrapeJob, ScrapeError, User,
           MedicalCategory, MedicalType, Fokontany,
+          AnalyticsEvent,
         ],
         migrations: ['dist/migrations/*.js'],
         // Réorg du schéma en cours : le schéma est géré par les scripts SQL idempotents
@@ -52,6 +55,7 @@ import { GeoModule } from './modules/geo/geo.module';
     UsersModule,
     TaxonomyModule,
     GeoModule,
+    AnalyticsModule,
   ],
 })
 export class AppModule {}
