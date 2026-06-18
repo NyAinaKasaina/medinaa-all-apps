@@ -12,7 +12,7 @@ export function DeviceMockup({
   if (variant === 'phone') {
     return (
       <div className={cn('overflow-hidden rounded-[2.5rem] border-8 border-foreground/90 bg-foreground/90 shadow-2xl', className)}>
-        <Image src={src} alt={alt} width={390} height={844} className="h-auto w-full" />
+        <Image src={src} alt={alt} width={390} height={844} unoptimized className="h-auto w-full" />
       </div>
     );
   }
@@ -23,7 +23,7 @@ export function DeviceMockup({
         <span className="h-2.5 w-2.5 rounded-full bg-secondary" />
         <span className="h-2.5 w-2.5 rounded-full bg-primary" />
       </div>
-      <Image src={src} alt={alt} width={1200} height={750} className="h-auto w-full" />
+      <Image src={src} alt={alt} width={1200} height={750} unoptimized className="h-auto w-full" />
     </div>
   );
 }

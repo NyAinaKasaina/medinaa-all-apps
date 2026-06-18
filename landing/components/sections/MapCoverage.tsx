@@ -12,7 +12,7 @@ export function MapCoverage() {
           <p className="mt-4 text-muted-foreground">{t('body')}</p>
         </MotionReveal>
         <MotionReveal delay={0.1} className="flex justify-center">
-          <Image src="/mockups/madagascar.svg" alt={t('title')} width={400} height={600} className="h-auto w-64" />
+          <Image src="/mockups/madagascar.svg" alt={t('title')} width={400} height={600} unoptimized className="h-auto w-72 max-w-full drop-shadow-md" />
         </MotionReveal>
       </div>
     </section>
