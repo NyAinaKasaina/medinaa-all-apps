@@ -1,0 +1,99 @@
+{
+  "Meta": {
+    "title": "Medinaa — Madagascar's healthcare directory",
+    "description": "Madagascar's healthcare directory — free and geolocated: hospitals, pharmacies, doctors, health posts and CSBs on one map.",
+    "tagline": "All of Madagascar's healthcare, on one map."
+  },
+  "Nav": {
+    "features": "Features",
+    "how": "How it works",
+    "coverage": "Coverage",
+    "faq": "FAQ",
+    "openWebApp": "Open web app",
+    "themeToggle": "Toggle theme",
+    "menu": "Menu"
+  },
+  "Hero": {
+    "title": "Find the care you need, wherever you are in Madagascar.",
+    "subtitle": "Hospitals, pharmacies, doctors, health posts, CSBs… {count}+ geolocated facilities, for free. On the web and on Android.",
+    "searchPlaceholderType": "Hospital, pharmacy, doctor…",
+    "searchPlaceholderCity": "City or town",
+    "searchButton": "Search"
+  },
+  "Cta": {
+    "webApp": "Open web app",
+    "playStore": "Available on Google Play",
+    "androidHint": "On Android? Enjoy the native app.",
+    "finalTitle": "Find a healthcare facility now.",
+    "finalSubtitle": "Free, no account needed, anywhere in Madagascar."
+  },
+  "Trust": {
+    "osm": "Open OpenStreetMap data",
+    "national": "National coverage",
+    "free": "100% free",
+    "noAccount": "No account needed"
+  },
+  "Stats": {
+    "title": "A database covering the entire country",
+    "total": "listed facilities",
+    "cities": "cities & towns",
+    "withPhone": "with a phone number",
+    "withHours": "with opening hours",
+    "byType": "By facility type"
+  },
+  "Features": {
+    "title": "Why Medinaa",
+    "searchTitle": "Search & filters",
+    "searchBody": "Filter by type: hospital, pharmacy, doctor, health post, CSB…",
+    "nearMeTitle": "Near me",
+    "nearMeBody": "Geolocate the nearest facilities with one tap.",
+    "mapTitle": "Interactive map",
+    "mapBody": "Explore all of Madagascar on a smooth map.",
+    "detailsTitle": "Detailed profiles",
+    "detailsBody": "Phone number, opening hours, address and OpenStreetMap link.",
+    "routeTitle": "Directions",
+    "routeBody": "Calculate your route with a customizable starting point.",
+    "i18nTitle": "Multilingual",
+    "i18nBody": "Available in French, Malagasy and English."
+  },
+  "How": {
+    "title": "How it works",
+    "step1Title": "Search",
+    "step1Body": "Enter a facility type and a location.",
+    "step2Title": "Explore",
+    "step2Body": "Browse the map and the list of results.",
+    "step3Title": "Contact",
+    "step3Body": "Call the facility or get directions."
+  },
+  "Showcase": {
+    "title": "On the web and in your pocket",
+    "body": "The same database, on the web app and on Android.",
+    "webAlt": "Preview of the Medinaa web app",
+    "mobileAlt": "Preview of the Medinaa mobile app"
+  },
+  "Coverage": {
+    "title": "The whole island covered",
+    "body": "From major cities to rural communes, everywhere in Madagascar."
+  },
+  "Faq": {
+    "title": "Frequently asked questions",
+    "q1": "Is Medinaa free?",
+    "a1": "Yes, Medinaa is 100% free and requires no account.",
+    "q2": "Where does the data come from?",
+    "a2": "The data comes from OpenStreetMap, an open and collaborative mapping database.",
+    "q3": "Is there an iOS app?",
+    "a3": "For now the native app is on Android only. On iPhone, use the web app which works in the browser.",
+    "q4": "How do I report an error on a facility?",
+    "a4": "You can contribute directly on OpenStreetMap or contact us.",
+    "q5": "What is the difference between the web app and the mobile app?",
+    "a5": "The web app works everywhere without installation; the Android app offers a native experience (geolocation, offline, notifications)."
+  },
+  "Footer": {
+    "about": "About",
+    "contact": "Contact",
+    "legal": "Legal notice",
+    "privacy": "Privacy",
+    "osmAttribution": "Data © OpenStreetMap contributors (ODbL license)",
+    "rights": "All rights reserved."
+  }
+}

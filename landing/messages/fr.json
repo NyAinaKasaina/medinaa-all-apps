@@ -1,0 +1,99 @@
+{
+  "Meta": {
+    "title": "Medinaa — L'annuaire santé de Madagascar",
+    "description": "L'annuaire des établissements de santé de Madagascar — gratuit, géolocalisé : hôpitaux, pharmacies, médecins, dispensaires et CSB sur une carte.",
+    "tagline": "Toute la santé de Madagascar, sur une carte."
+  },
+  "Nav": {
+    "features": "Fonctionnalités",
+    "how": "Comment ça marche",
+    "coverage": "Couverture",
+    "faq": "FAQ",
+    "openWebApp": "Ouvrir l'app web",
+    "themeToggle": "Changer de thème",
+    "menu": "Menu"
+  },
+  "Hero": {
+    "title": "Trouvez les soins dont vous avez besoin, où que vous soyez à Madagascar.",
+    "subtitle": "Hôpitaux, pharmacies, médecins, dispensaires, CSB… {count}+ établissements géolocalisés, gratuitement. Sur le web et sur Android.",
+    "searchPlaceholderType": "Hôpital, pharmacie, médecin…",
+    "searchPlaceholderCity": "Ville ou commune",
+    "searchButton": "Rechercher"
+  },
+  "Cta": {
+    "webApp": "Ouvrir l'app web",
+    "playStore": "Disponible sur Google Play",
+    "androidHint": "Sur Android ? Profitez de l'app native.",
+    "finalTitle": "Trouvez un établissement de santé maintenant.",
+    "finalSubtitle": "Gratuit, sans compte, partout à Madagascar."
+  },
+  "Trust": {
+    "osm": "Données ouvertes OpenStreetMap",
+    "national": "Couverture nationale",
+    "free": "100 % gratuit",
+    "noAccount": "Sans compte"
+  },
+  "Stats": {
+    "title": "Une base de données qui couvre tout le pays",
+    "total": "établissements référencés",
+    "cities": "villes & communes",
+    "withPhone": "avec un numéro de téléphone",
+    "withHours": "avec des horaires d'ouverture",
+    "byType": "Par type d'établissement"
+  },
+  "Features": {
+    "title": "Pourquoi Medinaa",
+    "searchTitle": "Recherche & filtres",
+    "searchBody": "Filtrez par type : hôpital, pharmacie, médecin, dispensaire, CSB…",
+    "nearMeTitle": "Près de moi",
+    "nearMeBody": "Géolocalisez les établissements les plus proches en un tap.",
+    "mapTitle": "Carte interactive",
+    "mapBody": "Explorez tout Madagascar sur une carte fluide.",
+    "detailsTitle": "Fiches détaillées",
+    "detailsBody": "Téléphone, horaires, adresse et lien OpenStreetMap.",
+    "routeTitle": "Itinéraire",
+    "routeBody": "Calculez votre trajet avec un point de départ personnalisable.",
+    "i18nTitle": "Multilingue",
+    "i18nBody": "Disponible en français, malgache et anglais."
+  },
+  "How": {
+    "title": "Comment ça marche",
+    "step1Title": "Cherchez",
+    "step1Body": "Indiquez un type d'établissement et un lieu.",
+    "step2Title": "Explorez",
+    "step2Body": "Parcourez la carte et la liste des résultats.",
+    "step3Title": "Contactez",
+    "step3Body": "Appelez l'établissement ou lancez l'itinéraire."
+  },
+  "Showcase": {
+    "title": "Sur le web et dans votre poche",
+    "body": "La même base de données, sur l'app web et sur Android.",
+    "webAlt": "Aperçu de l'app web Medinaa",
+    "mobileAlt": "Aperçu de l'app mobile Medinaa"
+  },
+  "Coverage": {
+    "title": "Toute l'île couverte",
+    "body": "Des grandes villes aux communes rurales, partout à Madagascar."
+  },
+  "Faq": {
+    "title": "Questions fréquentes",
+    "q1": "Medinaa est-il gratuit ?",
+    "a1": "Oui, Medinaa est 100 % gratuit et ne nécessite aucun compte.",
+    "q2": "D'où viennent les données ?",
+    "a2": "Les données proviennent d'OpenStreetMap, une base cartographique ouverte et collaborative.",
+    "q3": "Existe-t-il une app iOS ?",
+    "a3": "Pour l'instant l'app native est sur Android. Sur iPhone, utilisez l'app web qui fonctionne dans le navigateur.",
+    "q4": "Comment signaler une erreur sur un établissement ?",
+    "a4": "Vous pouvez contribuer directement sur OpenStreetMap ou nous contacter.",
+    "q5": "Quelle différence entre l'app web et l'app mobile ?",
+    "a5": "L'app web marche partout sans installation ; l'app Android offre une expérience native (géolocalisation, hors-ligne, notifications)."
+  },
+  "Footer": {
+    "about": "À propos",
+    "contact": "Contact",
+    "legal": "Mentions légales",
+    "privacy": "Confidentialité",
+    "osmAttribution": "Données © contributeurs OpenStreetMap (licence ODbL)",
+    "rights": "Tous droits réservés."
+  }
+}
