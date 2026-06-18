@@ -15,6 +15,7 @@ package-lock.json
 # Mobile
 mobile/node_modules/
 mobile/releases/*.apk
+mobile/coverage/
 
 # OS
 .DS_Store
