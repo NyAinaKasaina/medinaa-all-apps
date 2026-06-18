@@ -1,0 +1,4 @@
+medinaa.mg, www.medinaa.mg {
+  encode gzip zstd
+  reverse_proxy localhost:3000
+}
