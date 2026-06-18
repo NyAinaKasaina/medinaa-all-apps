@@ -1,5 +1,6 @@
 import { setRequestLocale } from 'next-intl/server';
 import { getStats } from '@/lib/stats';
+import { JsonLd } from '@/components/seo/JsonLd';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Hero } from '@/components/sections/Hero';
@@ -24,6 +25,7 @@ export default async function HomePage({
 
   return (
     <>
+      <JsonLd locale={locale} />
       <Header locale={locale} />
       <main>
         <Hero locale={locale} total={stats.total} />
