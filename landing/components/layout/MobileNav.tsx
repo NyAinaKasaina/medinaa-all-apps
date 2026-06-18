@@ -21,8 +21,11 @@ export function MobileNav({ locale }: { locale: string }) {
           {ANCHORS.map((a) => (
             <a key={a} href={`#${a}`} className="text-base">{t(a)}</a>
           ))}
-          <a href={env.webAppUrl} className="mt-2 inline-flex h-11 items-center justify-center rounded-md bg-primary font-semibold text-primary-foreground">
-            {t('openWebApp')}
+          <a href={`${env.webAppUrl}/login`} className="mt-2 inline-flex h-11 items-center justify-center rounded-md border border-border font-semibold">
+            {t('login')}
+          </a>
+          <a href={`${env.webAppUrl}/register`} className="inline-flex h-11 items-center justify-center rounded-md bg-primary font-semibold text-primary-foreground">
+            {t('signUp')}
           </a>
         </nav>
       </SheetContent>

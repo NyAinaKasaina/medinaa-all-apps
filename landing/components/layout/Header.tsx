@@ -35,7 +35,7 @@ export function Header({ locale }: { locale: string }) {
         <a href={`/${locale}`} className="flex items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo-mark.png" alt="Medinaa" width={400} height={365} className="h-9 w-auto" />
-          <span className="text-lg font-bold tracking-tight text-primary">Medinaa</span>
+          <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-lg font-bold tracking-tight text-transparent">Medinaa</span>
         </a>
         <nav className="hidden items-center gap-6 md:flex">
           {ANCHORS.map((a) => (
@@ -48,10 +48,16 @@ export function Header({ locale }: { locale: string }) {
           <LangSwitcher current={locale} />
           <ThemeToggle label={t('themeToggle')} />
           <a
-            href={env.webAppUrl}
-            className="hidden h-9 items-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90 sm:inline-flex"
+            href={`${env.webAppUrl}/login`}
+            className="hidden h-9 items-center rounded-md px-3 text-sm font-semibold text-foreground hover:text-primary sm:inline-flex"
           >
-            {t('openWebApp')}
+            {t('login')}
+          </a>
+          <a
+            href={`${env.webAppUrl}/register`}
+            className="hidden h-9 items-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 sm:inline-flex"
+          >
+            {t('signUp')}
           </a>
           <MobileNav locale={locale} />
         </div>

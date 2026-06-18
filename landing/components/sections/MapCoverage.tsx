@@ -12,7 +12,7 @@ export function MapCoverage() {
         </MotionReveal>
         <MotionReveal delay={0.1} className="flex justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-mark.png" alt={t('title')} width={400} height={365} loading="lazy" className="w-64 max-w-full drop-shadow-md" />
+          <img src="/mockups/madagascar.svg" alt={t('title')} width={1024} height={1024} loading="lazy" className="w-72 max-w-full drop-shadow-md sm:w-80" />
         </MotionReveal>
       </div>
     </section>

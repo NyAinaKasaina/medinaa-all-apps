@@ -20,7 +20,7 @@ export function AppCtas({
       key="web"
       href={env.webAppUrl}
       onClick={() => track({ name: 'cta_click', locale, path: location.pathname, device: detectDevice(navigator.userAgent), meta: { target: 'web_app' } })}
-      className="inline-flex h-12 items-center justify-center rounded-lg bg-primary px-6 font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
+      className="inline-flex h-14 items-center justify-center rounded-lg bg-primary px-7 font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90"
     >
       {t('webApp')}
     </a>
@@ -35,7 +35,7 @@ export function AppCtas({
       className="inline-flex items-center transition hover:opacity-90"
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/badges/google-play.svg" alt={t('playStore')} width={189} height={56} className="h-12 w-auto" />
+      <img src="/badges/google-play.svg" alt={t('playStore')} width={189} height={56} className="h-14 w-auto" />
     </a>
   );
 

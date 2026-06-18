@@ -10,6 +10,8 @@
     "coverage": "Couverture",
     "faq": "FAQ",
     "openWebApp": "Ouvrir l'app web",
+    "login": "Se connecter",
+    "signUp": "S'inscrire",
     "themeToggle": "Changer de thème",
     "menu": "Menu"
   },
