@@ -11,8 +11,18 @@ const QA = [
 
 export function Faq() {
   const t = useTranslations('Faq');
+  const faqLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: QA.map(({ q, a }) => ({
+      '@type': 'Question',
+      name: t(q),
+      acceptedAnswer: { '@type': 'Answer', text: t(a) },
+    })),
+  };
   return (
     <section id="faq" className="mx-auto max-w-3xl px-4 py-20">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }} />
       <MotionReveal>
         <h2 className="text-3xl font-bold tracking-tight">{t('title')}</h2>
       </MotionReveal>
