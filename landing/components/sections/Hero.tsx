@@ -16,7 +16,7 @@ export function Hero({ locale, total }: { locale: string; total: number }) {
         </h1>
         <MotionReveal delay={0.1}>
           <p className="mt-6 max-w-2xl text-lg text-muted-foreground">
-            {t('subtitle', { count: total.toLocaleString('fr-FR') })}
+            {t('subtitle', { count: total.toLocaleString(locale) })}
           </p>
         </MotionReveal>
         <MotionReveal delay={0.2}>

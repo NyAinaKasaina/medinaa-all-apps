@@ -1,7 +1,7 @@
 'use client';
 import { useEffect } from 'react';
 import { track } from '@/lib/analytics';
-import { isAndroidUA } from '@/lib/device';
+import { detectDevice } from '@/lib/device';
 
 export function AnalyticsBeacon({ locale }: { locale: string }) {
   useEffect(() => {
@@ -10,7 +10,7 @@ export function AnalyticsBeacon({ locale }: { locale: string }) {
       locale,
       path: window.location.pathname,
       referrer: document.referrer || undefined,
-      device: isAndroidUA(navigator.userAgent) ? 'android' : 'other',
+      device: detectDevice(navigator.userAgent),
     });
   }, [locale]);
   return null;

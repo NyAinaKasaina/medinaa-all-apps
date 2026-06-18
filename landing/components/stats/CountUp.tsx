@@ -7,10 +7,12 @@ export function CountUp({
   to,
   duration = 1500,
   suffix = '',
+  locale,
 }: {
   to: number;
   duration?: number;
   suffix?: string;
+  locale?: string;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
   const inView = useInView(ref, { once: true, margin: '-60px' });
@@ -36,7 +38,7 @@ export function CountUp({
 
   return (
     <span ref={ref}>
-      {value.toLocaleString('fr-FR')}
+      {value.toLocaleString(locale ?? 'fr-FR')}
       {suffix}
     </span>
   );

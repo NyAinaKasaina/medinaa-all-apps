@@ -9,7 +9,7 @@ describe('BentoStats', () => {
   it('affiche le titre de section et les libellés', () => {
     render(
       <NextIntlClientProvider locale="fr" messages={messages}>
-        <BentoStats stats={FALLBACK_STATS} />
+        <BentoStats stats={FALLBACK_STATS} locale="fr" />
       </NextIntlClientProvider>,
     );
     expect(screen.getByText(messages.Stats.title)).toBeInTheDocument();

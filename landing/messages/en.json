@@ -94,6 +94,7 @@
     "legal": "Legal notice",
     "privacy": "Privacy",
     "osmAttribution": "Data © OpenStreetMap contributors (ODbL license)",
-    "rights": "All rights reserved."
+    "rights": "All rights reserved.",
+    "privacyNotice": "Medinaa uses internal audience measurement, without cookies or third-party trackers, to improve the service."
   }
 }

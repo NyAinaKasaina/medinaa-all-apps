@@ -1,3 +1,5 @@
+import { env } from '@/lib/env';
+
 export interface MedinaaStats {
   total: number;
   byType: Record<string, number>;
@@ -23,7 +25,7 @@ export const FALLBACK_STATS: MedinaaStats = {
 };
 
 export async function getStats(
-  backendUrl: string = process.env.BACKEND_API_URL ?? '',
+  backendUrl: string = env.backendApiUrl,
 ): Promise<MedinaaStats> {
   if (!backendUrl) return FALLBACK_STATS;
   try {

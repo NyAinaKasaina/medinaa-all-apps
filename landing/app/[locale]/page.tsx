@@ -33,7 +33,7 @@ export default async function HomePage({
       <main>
         <Hero locale={locale} total={stats.total} />
         <TrustBar />
-        <BentoStats stats={stats} />
+        <BentoStats stats={stats} locale={locale} />
         <Features />
         <HowItWorks />
         <AppShowcase locale={locale} />
