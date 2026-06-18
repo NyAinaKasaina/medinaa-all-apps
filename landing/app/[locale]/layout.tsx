@@ -1,14 +1,25 @@
 import type { ReactNode } from 'react';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { hasLocale, NextIntlClientProvider } from 'next-intl';
 import { setRequestLocale } from 'next-intl/server';
 import { routing } from '@/i18n/routing';
 import { figtree } from '@/lib/fonts';
 import { ThemeProvider } from '@/components/providers/ThemeProvider';
+import { buildMetadata } from '@/lib/seo';
 import '@/globals.css';
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return buildMetadata(locale);
 }
 
 export default async function LocaleLayout({
