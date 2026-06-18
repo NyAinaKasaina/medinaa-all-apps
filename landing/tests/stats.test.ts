@@ -18,6 +18,15 @@ describe('getStats', () => {
     expect(s.byType).toEqual(FALLBACK_STATS.byType); // champ absent => fallback
   });
 
+  it('renvoie le fallback si le backend répond en erreur HTTP', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: false, status: 500, json: async () => ({}) }),
+    );
+    const s = await getStats('http://backend');
+    expect(s).toEqual(FALLBACK_STATS);
+  });
+
   it('renvoie le fallback si la requête échoue', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('down')));
     const s = await getStats('http://backend');
