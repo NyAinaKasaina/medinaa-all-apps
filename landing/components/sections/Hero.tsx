@@ -10,11 +10,10 @@ export function Hero({ locale, total }: { locale: string; total: number }) {
     <section className="relative overflow-hidden">
       <div className="absolute inset-0 -z-10 bg-gradient-to-br from-primary/10 via-background to-secondary/10" />
       <div className="mx-auto max-w-6xl px-4 py-20 sm:py-28">
-        <MotionReveal>
-          <h1 className="max-w-3xl text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
-            {t('title')}
-          </h1>
-        </MotionReveal>
+        {/* H1 rendered immediately (no opacity:0) to avoid delaying LCP */}
+        <h1 className="max-w-3xl text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
+          {t('title')}
+        </h1>
         <MotionReveal delay={0.1}>
           <p className="mt-6 max-w-2xl text-lg text-muted-foreground">
             {t('subtitle', { count: total.toLocaleString('fr-FR') })}

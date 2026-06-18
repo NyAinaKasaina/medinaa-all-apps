@@ -15,7 +15,7 @@
     --tertiary: 38 92% 50%;        /* #F59E0B */
     --tertiary-foreground: 222 47% 11%;
     --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted-foreground: 215 16% 45%;  /* darkened for WCAG AA 4.5:1 contrast */
     --border: 214 32% 91%;
     --input: 214 32% 91%;
     --ring: 207 85% 41%;
