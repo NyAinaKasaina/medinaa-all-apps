@@ -30,10 +30,12 @@ export function AppCtas({
     <a
       key="play"
       href={env.playStoreUrl}
+      aria-label={t('playStore')}
       onClick={() => track({ name: 'cta_click', locale, path: location.pathname, device: detectDevice(navigator.userAgent), meta: { target: 'play_store' } })}
-      className="inline-flex h-12 items-center justify-center rounded-lg border border-border bg-card px-6 font-semibold transition hover:bg-muted"
+      className="inline-flex items-center transition hover:opacity-90"
     >
-      {t('playStore')}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/badges/google-play.svg" alt={t('playStore')} width={189} height={56} className="h-12 w-auto" />
     </a>
   );
 

@@ -32,8 +32,10 @@ export function Header({ locale }: { locale: string }) {
       )}
     >
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
-        <a href={`/${locale}`} className="text-lg font-bold tracking-tight text-primary">
-          Medinaa
+        <a href={`/${locale}`} className="flex items-center gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-mark.png" alt="Medinaa" width={400} height={365} className="h-9 w-auto" />
+          <span className="text-lg font-bold tracking-tight text-primary">Medinaa</span>
         </a>
         <nav className="hidden items-center gap-6 md:flex">
           {ANCHORS.map((a) => (

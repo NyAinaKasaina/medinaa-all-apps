@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { MotionReveal } from '@/components/motion/MotionReveal';
 
@@ -12,7 +11,8 @@ export function MapCoverage() {
           <p className="mt-4 text-muted-foreground">{t('body')}</p>
         </MotionReveal>
         <MotionReveal delay={0.1} className="flex justify-center">
-          <Image src="/mockups/madagascar.svg" alt={t('title')} width={400} height={600} unoptimized className="h-auto w-72 max-w-full drop-shadow-md" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-mark.png" alt={t('title')} width={400} height={365} loading="lazy" className="w-64 max-w-full drop-shadow-md" />
         </MotionReveal>
       </div>
     </section>
