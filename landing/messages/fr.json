@@ -17,9 +17,10 @@
   },
   "Hero": {
     "title": "Trouvez les soins dont vous avez besoin, où que vous soyez à Madagascar.",
-    "subtitle": "Hôpitaux, pharmacies, médecins, dispensaires, CSB… {count}+ établissements géolocalisés, gratuitement. Sur le web et sur Android.",
+    "subtitle": "Hôpitaux, pharmacies, médecins, dispensaires, CSB… {count}+ établissements géolocalisés, gratuitement.",
+    "subtitleApps": "Sur le web et sur Android.",
     "searchPlaceholderType": "Hôpital, pharmacie, médecin…",
-    "searchPlaceholderCity": "Ville ou commune",
+    "searchPlaceholderLocation": "Région ou district",
     "searchButton": "Rechercher"
   },
   "Cta": {

@@ -17,9 +17,10 @@
   },
   "Hero": {
     "title": "Find the care you need, wherever you are in Madagascar.",
-    "subtitle": "Hospitals, pharmacies, doctors, health posts, CSBs… {count}+ geolocated facilities, for free. On the web and on Android.",
+    "subtitle": "Hospitals, pharmacies, doctors, health posts, CSBs… {count}+ geolocated facilities, for free.",
+    "subtitleApps": "On the web and on Android.",
     "searchPlaceholderType": "Hospital, pharmacy, doctor…",
-    "searchPlaceholderCity": "City or town",
+    "searchPlaceholderLocation": "Region or district",
     "searchButton": "Search"
   },
   "Cta": {

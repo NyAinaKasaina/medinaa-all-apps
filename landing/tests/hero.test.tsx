@@ -15,5 +15,6 @@ describe('Hero', () => {
     );
     expect(screen.getByRole('heading', { level: 1, name: messages.Hero.title })).toBeInTheDocument();
     expect(screen.getByText(/2\s?173/)).toBeInTheDocument();
+    expect(screen.getByText(messages.Hero.subtitleApps)).toBeInTheDocument();
   });
 });

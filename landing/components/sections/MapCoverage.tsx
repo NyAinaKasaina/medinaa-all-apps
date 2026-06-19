@@ -1,5 +1,6 @@
 import { useTranslations } from 'next-intl';
 import { MotionReveal } from '@/components/motion/MotionReveal';
+import { MadagascarMap } from './MadagascarMap';
 
 export function MapCoverage() {
   const t = useTranslations('Coverage');
@@ -11,8 +12,7 @@ export function MapCoverage() {
           <p className="mt-4 text-muted-foreground">{t('body')}</p>
         </MotionReveal>
         <MotionReveal delay={0.1} className="flex justify-center">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/mockups/madagascar.svg" alt={t('title')} width={1024} height={1024} loading="lazy" className="w-72 max-w-full drop-shadow-md sm:w-80" />
+          <MadagascarMap title={t('title')} className="w-72 max-w-full drop-shadow-md sm:w-80" />
         </MotionReveal>
       </div>
     </section>

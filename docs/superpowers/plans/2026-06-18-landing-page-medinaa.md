@@ -2603,7 +2603,7 @@ export function CtaSection({ locale }: { locale: string }) {
   const t = useTranslations('Cta');
   return (
     <section className="bg-gradient-to-br from-primary to-secondary">
-      <div className="mx-auto max-w-4xl px-4 py-20 text-center">
+      <div className="mx-auto max-w-6xl px-4 py-20 text-center">
         <MotionReveal>
           <h2 className="text-3xl font-bold tracking-tight text-primary-foreground sm:text-4xl">
             {t('finalTitle')}
